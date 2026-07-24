@@ -1,0 +1,36 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# AI / Agent files
+.agents/
+.gemini/
+scratch/
+.oxlintrc.json
+
+# Large media / audio files
+AUDIO-SÁCH PRACTICE SETS/
+public/library/*.mp3
+public/library/*.pdf
+Đáp án Practice Tests.pdf
