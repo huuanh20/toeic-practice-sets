@@ -52,62 +52,15 @@ export function PdfViewer({
 }: PdfViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const lastPageChangeTime = useRef<number>(0);
+  const [hasLoadError, setHasLoadError] = useState<boolean>(false);
 
-  const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [useIframeFallback, setUseIframeFallback] = useState<boolean>(false);
-
-  // Derive direct download URL for fallback iframe
-  const getDirectUrl = () => {
-    if (pdfUrl.includes('file=')) {
-      const fileName = pdfUrl.split('file=')[1];
-      return `https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/${fileName}`;
-    }
-    if (pdfUrl.startsWith('/cdn-media/')) {
-      const fileName = pdfUrl.replace('/cdn-media/', '');
-      return `https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/${fileName}`;
-    }
-    if (pdfUrl.startsWith('http://') || pdfUrl.startsWith('https://')) {
-      return pdfUrl;
-    }
-    return window.location.origin + pdfUrl;
-  };
-
-  // Fetch PDF binary data to bypass Content-Type issues and CORS restrictions
   useEffect(() => {
-    let isMounted = true;
-    setIsLoading(true);
-    setUseIframeFallback(false);
-    setPdfData(null);
-
-    fetch(pdfUrl)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error ${res.status}`);
-        }
-        return res.arrayBuffer();
-      })
-      .then((buffer) => {
-        if (isMounted) {
-          setPdfData(new Uint8Array(buffer));
-          setIsLoading(false);
-        }
-      })
-      .catch((err) => {
-        if (isMounted) {
-          console.warn("Client pdf fetch error, switching to embedded viewer:", err);
-          setUseIframeFallback(true);
-          setIsLoading(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
+    setHasLoadError(false);
   }, [pdfUrl]);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
+    setHasLoadError(false);
   }
 
   // Ctrl + Wheel Zoom & Normal Scroll Page Navigation Handler
@@ -152,52 +105,30 @@ export function PdfViewer({
     };
   }, [zoom, onZoomChange, page, numPages, onPageChange]);
 
-  const directUrl = getDirectUrl();
-
   return (
     <div 
       ref={containerRef}
       className="flex-1 overflow-auto bg-app-bg p-4 md:p-6 flex justify-center items-start border-l border-app-border relative min-h-[500px]"
     >
       <div className="w-full h-full max-w-full flex flex-col items-center justify-center">
-        {isLoading && <SkeletonPage />}
-
-        {useIframeFallback && (
-          <div className="w-full h-[calc(100vh-140px)] min-h-[600px] flex flex-col rounded-lg overflow-hidden border border-app-border bg-app-card shadow-sm">
-            <div className="p-2 bg-app-hover border-b border-app-border flex items-center justify-between px-4">
-              <span className="text-xs font-medium text-app-text-muted">Chế độ xem nhúng Google Docs PDF Viewer</span>
-              <a
-                href={directUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs text-indigo-500 hover:underline flex items-center gap-1 font-medium"
-              >
-                Tải file PDF gốc <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-            <iframe
-              src={`https://docs.google.com/viewer?url=${encodeURIComponent(directUrl)}&embedded=true`}
-              className="w-full flex-1 border-0"
-              title="PDF Embedded Viewer"
-            />
-          </div>
-        )}
-
-        {!isLoading && !useIframeFallback && pdfData && (
+        {!hasLoadError ? (
           <Document
-            file={{ data: pdfData }}
+            file={pdfUrl}
             onLoadSuccess={onDocumentLoadSuccess}
             loading={<SkeletonPage />}
-            onLoadError={() => setUseIframeFallback(true)}
+            onLoadError={(err) => {
+              console.warn("PDF Load error, switching to native iframe:", err);
+              setHasLoadError(true);
+            }}
             error={
               <div className="flex flex-col items-center justify-center py-16 px-4 gap-4 text-center">
                 <AlertCircle className="h-8 w-8 text-rose-500" />
-                <span className="text-sm font-semibold text-app-text">Đang chuyển sang giao diện đọc PDF dự phòng...</span>
+                <span className="text-sm font-semibold text-app-text">Đang chuyển sang chế độ hiển thị nhúng...</span>
                 <button
-                  onClick={() => setUseIframeFallback(true)}
+                  onClick={() => setHasLoadError(true)}
                   className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-medium"
                 >
-                  Xem qua Google Docs Viewer
+                  Chuyển sang chế độ nhúng
                 </button>
               </div>
             }
@@ -211,6 +142,25 @@ export function PdfViewer({
               devicePixelRatio={Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio : 1)}
             />
           </Document>
+        ) : (
+          <div className="w-full h-[calc(100vh-140px)] min-h-[600px] flex flex-col rounded-lg overflow-hidden border border-app-border bg-app-card shadow-sm">
+            <div className="p-2 bg-app-hover border-b border-app-border flex items-center justify-between px-4">
+              <span className="text-xs font-medium text-app-text-muted">Chế độ đọc PDF nhúng trực tiếp</span>
+              <a
+                href={pdfUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs text-indigo-500 hover:underline flex items-center gap-1 font-medium"
+              >
+                Tải file PDF gốc <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+            <iframe
+              src={pdfUrl}
+              className="w-full flex-1 border-0"
+              title="PDF Embedded Viewer"
+            />
+          </div>
         )}
       </div>
     </div>
