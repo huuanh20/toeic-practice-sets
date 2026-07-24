@@ -877,7 +877,8 @@ export function AnswerSheet({
                       message: "Lưu lịch sử bài làm này và reset để làm lại từ đầu?",
                       onConfirm: () => {
                         onSaveAttempt(correctCount, incorrectCount, totalScore);
-                        setTab('history');
+                        setIsGradingRevealed(false);
+                        setTab('doing');
                       }
                     });
                   }}
