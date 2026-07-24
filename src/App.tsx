@@ -226,15 +226,24 @@ export default function App() {
 
   const activeTest = config.tests.find((t) => t.id === activeTestId) || config.tests[0];
 
+  // Media URL Resolver (supports remote URLs like GitHub Releases or local /library/ files)
+  const resolveMediaUrl = (fileOrUrl: string) => {
+    if (!fileOrUrl) return '';
+    if (fileOrUrl.startsWith('http://') || fileOrUrl.startsWith('https://')) {
+      return fileOrUrl;
+    }
+    return `/library/${fileOrUrl}`;
+  };
+
   // PDF URL Resolver
   const getPdfUrl = () => {
-    if (activeTab === 'practice') return `/library/${config.practicePdf}`;
-    if (activeTab === 'transcript') return `/library/${config.transcriptPdf}`;
-    return `/library/${config.vocabularyPdf}`;
+    if (activeTab === 'practice') return resolveMediaUrl(config.practicePdf);
+    if (activeTab === 'transcript') return resolveMediaUrl(config.transcriptPdf);
+    return resolveMediaUrl(config.vocabularyPdf);
   };
 
   const getRightPdfUrl = () => {
-    return `/library/${config.vocabularyPdf}`;
+    return resolveMediaUrl(config.vocabularyPdf);
   };
 
   // Switch Test Handler
@@ -715,7 +724,7 @@ export default function App() {
 
       {/* Footer Player */}
       <AudioPlayer
-        audioUrl={`/library/${activeTest.audio}`}
+        audioUrl={resolveMediaUrl(activeTest.audio)}
         audioRef={audioRef}
         playbackSpeed={playbackSpeed}
         onSpeedChange={setPlaybackSpeed}

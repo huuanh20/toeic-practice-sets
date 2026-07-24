@@ -1,42 +1,42 @@
 {
   "bookTitle": "TOEIC Practice Sets",
-  "practicePdf": "Toeic Practice Sets (1).pdf",
-  "transcriptPdf": "Toeic Listening Decoded.pdf",
-  "vocabularyPdf": "Toeic Vocabulary Matrix (1).pdf",
+  "practicePdf": "https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/Toeic_Practice_Sets.pdf",
+  "transcriptPdf": "https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/Toeic_Listening_Decoded.pdf",
+  "vocabularyPdf": "https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/Toeic_Vocabulary_Matrix.pdf",
   "tests": [
     {
       "id": 1,
-      "audio": "Test 1.mp3",
+      "audio": "https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/Test_1.mp3",
       "practicePage": 2,
       "transcriptPage": 2
     },
     {
       "id": 2,
-      "audio": "Test 2.mp3",
+      "audio": "https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/Test_2.mp3",
       "practicePage": 45,
       "transcriptPage": 31
     },
     {
       "id": 3,
-      "audio": "Test 3.mp3",
+      "audio": "https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/Test_3.mp3",
       "practicePage": 89,
       "transcriptPage": 61
     },
     {
       "id": 4,
-      "audio": "Test 4.mp3",
+      "audio": "https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/Test_4.mp3",
       "practicePage": 133,
       "transcriptPage": 91
     },
     {
       "id": 5,
-      "audio": "Test 5.mp3",
+      "audio": "https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/Test_5.mp3",
       "practicePage": 177,
       "transcriptPage": 121
     },
     {
       "id": 6,
-      "audio": "Test 6.mp3",
+      "audio": "https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/Test_6.mp3",
       "practicePage": 221,
       "transcriptPage": 151
     }
