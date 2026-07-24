@@ -284,8 +284,23 @@ export function AnswerSheet({
       return num > LISTENING_END;
     }).length;
 
-  const listeningScore = estimateListeningScore(listeningCorrect);
-  const readingScore = estimateReadingScore(readingCorrect);
+  // Count total graded answers per section (both correct and incorrect)
+  const listeningGraded = Object.entries(grades)
+    .filter(([k]) => {
+      if (!k.startsWith(`${testId}-`)) return false;
+      const num = parseInt(k.split('-')[1]);
+      return num <= LISTENING_END;
+    }).length;
+
+  const readingGraded = Object.entries(grades)
+    .filter(([k]) => {
+      if (!k.startsWith(`${testId}-`)) return false;
+      const num = parseInt(k.split('-')[1]);
+      return num > LISTENING_END;
+    }).length;
+
+  const listeningScore = listeningGraded > 0 ? estimateListeningScore(listeningCorrect) : 0;
+  const readingScore = readingGraded > 0 ? estimateReadingScore(readingCorrect) : 0;
   const totalScore = listeningScore + readingScore;
 
   return (
