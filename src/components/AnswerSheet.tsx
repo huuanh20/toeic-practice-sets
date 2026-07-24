@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Check, X, Trash2, Award, BookOpen, CheckCircle } from 'lucide-react';
+import { Check, X, Trash2, Award, BookOpen, CheckCircle, Filter } from 'lucide-react';
 import { answerKeys } from '../data/answerKeys';
 import type { Attempt } from '../types/attempt';
+import { ProgressChart } from './ProgressChart';
 
 const listeningScoreTable = [
   5, 15, 20, 25, 30, 35, 40, 45, 50, 55,
@@ -16,6 +17,33 @@ const listeningScoreTable = [
   465, 470, 475, 480, 485, 490, 495, 495, 495, 495,
   495
 ];
+
+const readingScoreTable = [
+  5, 15, 20, 25, 30, 35, 40, 45, 50, 55,
+  60, 65, 70, 75, 80, 85, 90, 95, 100, 105,
+  110, 115, 120, 125, 130, 135, 140, 145, 150, 155,
+  160, 165, 170, 175, 180, 185, 190, 195, 200, 205,
+  210, 215, 220, 225, 230, 235, 240, 245, 250, 255,
+  260, 265, 270, 275, 280, 285, 290, 295, 300, 305,
+  310, 315, 320, 325, 330, 335, 340, 345, 350, 355,
+  360, 365, 370, 375, 380, 385, 395, 400, 405, 410,
+  415, 420, 425, 430, 435, 440, 445, 450, 455, 460,
+  465, 470, 475, 480, 485, 490, 495, 495, 495, 495,
+  495
+];
+
+const TOTAL_QUESTIONS = 200;
+const LISTENING_END = 100;
+
+const sectionHeaders: Record<number, string> = {
+  1: '🎧 PART 1 — Photos (1-6)',
+  7: '🎧 PART 2 — Q&A (7-31)',
+  32: '🎧 PART 3 — Conversations (32-70)',
+  71: '🎧 PART 4 — Talks (71-100)',
+  101: '📖 PART 5 — Incomplete Sentences (101-130)',
+  131: '📖 PART 6 — Text Completion (131-146)',
+  147: '📖 PART 7 — Reading Comprehension (147-200)',
+};
 
 interface AnswerSheetProps {
   testId: number;
@@ -43,6 +71,7 @@ export function AnswerSheet({
   onDeleteAttempt
 }: AnswerSheetProps) {
   const [tab, setTab] = useState<'doing' | 'grading' | 'history'>('doing');
+  const [showOnlyWrong, setShowOnlyWrong] = useState<boolean>(false);
   const [selectedAttemptId, setSelectedAttemptId] = useState<string | null>(null);
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -60,9 +89,13 @@ export function AnswerSheet({
   const isGrading = tab === 'grading';
   const hasKey = testId in answerKeys;
 
-  // Helper to estimate TOEIC Listening score based on correct answers from standard table
-  const estimateScore = (correctCount: number) => {
-    return listeningScoreTable[correctCount] ?? 5;
+  // Helper to estimate TOEIC scores based on correct answers from standard tables
+  const estimateListeningScore = (correctCount: number) => {
+    return listeningScoreTable[Math.min(correctCount, 100)] ?? 5;
+  };
+
+  const estimateReadingScore = (correctCount: number) => {
+    return readingScoreTable[Math.min(correctCount, 100)] ?? 5;
   };
 
   const [timeLeft, setTimeLeft] = useState<number>(45 * 60);
@@ -95,7 +128,7 @@ export function AnswerSheet({
     const keyAnswers = answerKeys[testId];
     let correct = 0;
     let incorrect = 0;
-    for (let num = 1; num <= 100; num++) {
+    for (let num = 1; num <= TOTAL_QUESTIONS; num++) {
       const qKey = `${testId}-${num}`;
       const userAns = answers[qKey];
       if (userAns !== undefined) {
@@ -107,7 +140,21 @@ export function AnswerSheet({
         }
       }
     }
-    const score = estimateScore(correct);
+    // Compute listening + reading correct counts
+    let lCorrect = 0;
+    let rCorrect = 0;
+    for (let num = 1; num <= TOTAL_QUESTIONS; num++) {
+      const qKey = `${testId}-${num}`;
+      const userAns = answers[qKey];
+      if (userAns !== undefined) {
+        const correctAns = keyAnswers?.[num];
+        if (correctAns && userAns === correctAns) {
+          if (num <= LISTENING_END) lCorrect++;
+          else rCorrect++;
+        }
+      }
+    }
+    const score = estimateListeningScore(lCorrect) + estimateReadingScore(rCorrect);
 
     // 3. Save attempt to history & reset sheet
     onSaveAttempt(correct, incorrect, score);
@@ -222,7 +269,24 @@ export function AnswerSheet({
     .filter(([k, val]) => k.startsWith(`${testId}-`) && val === false)
     .length;
 
-  const estimatedScore = estimateScore(correctCount);
+  // Separate Listening (1-100) and Reading (101-200) correct counts
+  const listeningCorrect = Object.entries(grades)
+    .filter(([k, val]) => {
+      if (!k.startsWith(`${testId}-`) || val !== true) return false;
+      const num = parseInt(k.split('-')[1]);
+      return num <= LISTENING_END;
+    }).length;
+
+  const readingCorrect = Object.entries(grades)
+    .filter(([k, val]) => {
+      if (!k.startsWith(`${testId}-`) || val !== true) return false;
+      const num = parseInt(k.split('-')[1]);
+      return num > LISTENING_END;
+    }).length;
+
+  const listeningScore = estimateListeningScore(listeningCorrect);
+  const readingScore = estimateReadingScore(readingCorrect);
+  const totalScore = listeningScore + readingScore;
 
   return (
     <div className="flex h-full w-80 flex-col border-l border-app-border bg-app-card shadow-lg select-none">
@@ -327,6 +391,9 @@ export function AnswerSheet({
         {tab === 'history' ? (
           /* History View */
           <div className="flex flex-col gap-3">
+            {/* Progress Chart */}
+            <ProgressChart attempts={attempts} />
+
             {attempts.length === 0 ? (
               <div className="flex flex-col items-center justify-center text-center p-8 border border-dashed border-app-border rounded-xl bg-app-bg/10 min-h-60">
                 <Award className="h-10 w-10 text-app-text/20 mb-2" />
@@ -381,45 +448,67 @@ export function AnswerSheet({
                         <span className="text-[9px] font-bold text-app-text/40 uppercase tracking-wider block">
                           Bản đồ câu trả lời:
                         </span>
-                        <div className="grid grid-cols-10 gap-1 rounded-lg border border-app-border bg-app-bg/30 p-2">
-                          {Array.from({ length: 100 }, (_, i) => {
-                            const num = i + 1;
-                            const qKey = `${attempt.testId}-${num}`;
-                            const isCorrect = attempt.grades[qKey];
-                            const ans = attempt.answers[qKey];
-                            
-                            let bgClass = "bg-app-card text-app-text/30 border border-app-border/40";
-                            const correctAns = answerKeys[attempt.testId]?.[num];
-                            let titleText = `Câu ${num}: Chưa trả lời`;
-
-                            if (ans) {
-                              if (isCorrect) {
-                                bgClass = "bg-emerald-500/90 text-white font-bold shadow-xs";
-                                titleText = `Câu ${num}: Bạn chọn ${ans} (Đúng)`;
-                              } else {
-                                bgClass = "bg-rose-500/90 text-white font-bold shadow-xs";
-                                titleText = `Câu ${num}: Bạn chọn ${ans} (Sai). Đáp án đúng: ${correctAns || 'Chưa rõ'}`;
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[8px] font-bold text-app-text/40">🎧 Listening (1-100)</span>
+                          <div className="grid grid-cols-10 gap-1 rounded-lg border border-app-border bg-app-bg/30 p-2">
+                            {Array.from({ length: 100 }, (_, i) => {
+                              const num = i + 1;
+                              const qKey = `${attempt.testId}-${num}`;
+                              const isCorrect = attempt.grades[qKey];
+                              const ans = attempt.answers[qKey];
+                              let bgClass = "bg-app-card text-app-text/30 border border-app-border/40";
+                              const correctAns = answerKeys[attempt.testId]?.[num];
+                              let titleText = `Câu ${num}: Chưa trả lời`;
+                              if (ans) {
+                                if (isCorrect) {
+                                  bgClass = "bg-emerald-500/90 text-white font-bold shadow-xs";
+                                  titleText = `Câu ${num}: Bạn chọn ${ans} (Đúng)`;
+                                } else {
+                                  bgClass = "bg-rose-500/90 text-white font-bold shadow-xs";
+                                  titleText = `Câu ${num}: Bạn chọn ${ans} (Sai). Đáp án đúng: ${correctAns || 'Chưa rõ'}`;
+                                }
                               }
-                            }
-
-                            return (
-                              <div
-                                key={num}
-                                title={titleText}
-                                className={`flex aspect-square items-center justify-center rounded text-[9px] font-bold ${bgClass}`}
-                              >
-                                {num}
-                              </div>
-                            );
-                          })}
+                              return (
+                                <div key={num} title={titleText} className={`flex aspect-square items-center justify-center rounded text-[9px] font-bold ${bgClass}`}>
+                                  {num}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <span className="text-[8px] font-bold text-app-text/40 mt-1">📖 Reading (101-200)</span>
+                          <div className="grid grid-cols-10 gap-1 rounded-lg border border-app-border bg-app-bg/30 p-2">
+                            {Array.from({ length: 100 }, (_, i) => {
+                              const num = i + 101;
+                              const qKey = `${attempt.testId}-${num}`;
+                              const isCorrect = attempt.grades[qKey];
+                              const ans = attempt.answers[qKey];
+                              let bgClass = "bg-app-card text-app-text/30 border border-app-border/40";
+                              const correctAns = answerKeys[attempt.testId]?.[num];
+                              let titleText = `Câu ${num}: Chưa trả lời`;
+                              if (ans) {
+                                if (isCorrect) {
+                                  bgClass = "bg-emerald-500/90 text-white font-bold shadow-xs";
+                                  titleText = `Câu ${num}: Bạn chọn ${ans} (Đúng)`;
+                                } else {
+                                  bgClass = "bg-rose-500/90 text-white font-bold shadow-xs";
+                                  titleText = `Câu ${num}: Bạn chọn ${ans} (Sai). Đáp án đúng: ${correctAns || 'Chưa rõ'}`;
+                                }
+                              }
+                              return (
+                                <div key={num} title={titleText} className={`flex aspect-square items-center justify-center rounded text-[9px] font-bold ${bgClass}`}>
+                                  {num}
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
 
                         {/* Full scrollable list of 100 questions */}
                         <div className="max-h-40 overflow-y-auto border border-app-border rounded-lg bg-app-bg/50 p-2 flex flex-col gap-1 text-[10px]">
                           <span className="font-bold text-app-text/60 uppercase tracking-wider text-[8px] mb-1 block sticky top-0 bg-app-card/90 py-0.5 backdrop-blur-xs">
-                            Chi tiết đáp án 100 câu:
+                            Chi tiết đáp án 200 câu:
                           </span>
-                          {Array.from({ length: 100 }, (_, i) => {
+                          {Array.from({ length: TOTAL_QUESTIONS }, (_, i) => {
                             const num = i + 1;
                             const qKey = `${attempt.testId}-${num}`;
                             const isCorrect = attempt.grades[qKey];
@@ -550,13 +639,42 @@ export function AnswerSheet({
           </div>
         ) : (
           /* Normal Question list (Doing / Grading) */
-          Array.from({ length: 100 }, (_, i) => {
+          Array.from({ length: TOTAL_QUESTIONS }, (_, i) => {
             const num = i + 1;
+            const header = sectionHeaders[num];
+
+            // Filter: only show wrong answers in grading mode
+            if (showOnlyWrong && isGrading) {
+              const key = getAnswerKey(num);
+              const grade = grades[key];
+              if (grade !== false) {
+                // Still render section headers even if filtering
+                if (header) {
+                  return (
+                    <div key={`header-${num}`} className="mt-3 mb-1 px-1">
+                      <span className="text-[10px] font-bold text-app-accent uppercase tracking-wider">{header}</span>
+                    </div>
+                  );
+                }
+                return null;
+              }
+            }
             const key = getAnswerKey(num);
             const selectedAns = answers[key];
             const grade = grades[key];
 
-            return (
+            const elements: React.ReactNode[] = [];
+
+            // Add section header if applicable
+            if (header && !showOnlyWrong) {
+              elements.push(
+                <div key={`header-${num}`} className={`${num > 1 ? 'mt-3' : ''} mb-1 px-1`}>
+                  <span className="text-[10px] font-bold text-app-accent uppercase tracking-wider">{header}</span>
+                </div>
+              );
+            }
+
+            elements.push(
               <div 
                 key={num}
                 className={`flex items-center justify-between rounded-lg p-2 transition-all ${
@@ -568,8 +686,8 @@ export function AnswerSheet({
                 }`}
               >
                 {/* Question Number */}
-                <div className="flex items-center gap-1.5 w-10">
-                  <span className="text-xs font-bold text-app-text/50">{num.toString().padStart(2, '0')}.</span>
+                <div className="flex items-center gap-1.5 w-12">
+                  <span className="text-xs font-bold text-app-text/50">{num.toString().padStart(3, '0')}.</span>
                   {grade === true && <Check className="h-3.5 w-3.5 text-emerald-500 stroke-[3]" />}
                   {grade === false && <X className="h-3.5 w-3.5 text-rose-500 stroke-[3]" />}
                 </div>
@@ -592,10 +710,15 @@ export function AnswerSheet({
                   ))}
                 </div>
 
-                {/* Grading Buttons (only in Grading mode) */}
+                {/* Grading Buttons (only in Grading mode) + correct answer hint */}
                 <div className="w-14 flex justify-end gap-1">
                   {isGrading && selectedAns && (
                     <>
+                      {grade === false && (
+                        <span className="text-[9px] font-bold text-emerald-500 mr-0.5" title="Đáp án đúng">
+                          {answerKeys[testId]?.[num] || '?'}
+                        </span>
+                      )}
                       <button
                         onClick={() => onGradeChange(num, grade === true ? null : true)}
                         title="Mark Correct"
@@ -623,6 +746,8 @@ export function AnswerSheet({
                 </div>
               </div>
             );
+
+            return elements;
           })
         )}
       </div>
@@ -632,7 +757,7 @@ export function AnswerSheet({
         {tab === 'doing' ? (
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between text-xs font-semibold text-app-text/70">
-              <span>Answered: {answeredCount} / 100</span>
+              <span>Answered: {answeredCount} / {TOTAL_QUESTIONS}</span>
               <button
                 onClick={() => {
                   setTab('grading');
@@ -665,16 +790,39 @@ export function AnswerSheet({
             <div className="flex items-center justify-between text-xs font-bold text-app-text/70">
               <span className="text-emerald-600">Correct: {correctCount}</span>
               <span className="text-rose-600">Incorrect: {incorrectCount}</span>
-              <span className="text-app-text/40">Un-graded: {100 - correctCount - incorrectCount}</span>
+              <span className="text-app-text/40">Un-graded: {TOTAL_QUESTIONS - correctCount - incorrectCount}</span>
             </div>
+
+            {/* Filter wrong answers toggle */}
+            <button
+              onClick={() => setShowOnlyWrong(!showOnlyWrong)}
+              className={`flex w-full items-center justify-center gap-1.5 rounded-lg border py-1.5 text-[11px] font-bold transition-all cursor-pointer ${
+                showOnlyWrong
+                  ? 'border-rose-500/30 bg-rose-500/10 text-rose-600'
+                  : 'border-app-border bg-app-bg text-app-text/60 hover:bg-app-hover'
+              }`}
+            >
+              <Filter className="h-3.5 w-3.5" />
+              {showOnlyWrong ? 'Đang lọc: Chỉ câu sai' : 'Lọc xem câu sai'}
+            </button>
             
             {/* Estimate Score Output */}
-            <div className="flex items-center justify-between rounded-lg bg-app-accent/10 border border-app-accent/20 p-2.5">
-              <div className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-app-accent" />
-                <span className="text-xs font-bold text-app-text">Est. Listening Score:</span>
+            <div className="flex flex-col gap-1.5 rounded-lg bg-app-accent/10 border border-app-accent/20 p-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-app-text/60">🎧 Listening:</span>
+                <span className="text-xs font-extrabold text-app-accent">{listeningScore} / 495</span>
               </div>
-              <span className="text-base font-extrabold text-app-accent">{estimatedScore} / 495</span>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-app-text/60">📖 Reading:</span>
+                <span className="text-xs font-extrabold text-app-accent">{readingScore} / 495</span>
+              </div>
+              <div className="flex items-center justify-between border-t border-app-accent/20 pt-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Award className="h-4 w-4 text-app-accent" />
+                  <span className="text-xs font-bold text-app-text">Total TOEIC:</span>
+                </div>
+                <span className="text-base font-extrabold text-app-accent">{totalScore} / 990</span>
+              </div>
             </div>
 
             {/* Save & Reset Button */}
@@ -684,7 +832,7 @@ export function AnswerSheet({
                   isOpen: true,
                   message: "Lưu lịch sử bài làm này và reset để làm lại từ đầu?",
                   onConfirm: () => {
-                    onSaveAttempt(correctCount, incorrectCount, estimatedScore);
+                    onSaveAttempt(correctCount, incorrectCount, totalScore);
                     setTab('history');
                   }
                 });

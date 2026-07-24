@@ -8,7 +8,7 @@ import { CommandPalette } from './components/CommandPalette';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import type { LibraryConfig } from './types/library';
 import { AnswerSheet } from './components/AnswerSheet';
-import { Loader2, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ExternalLink, Sparkles, BookOpen } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ExternalLink, Sparkles, BookOpen, Menu } from 'lucide-react';
 import { VocabularyQuiz } from './components/VocabularyQuiz';
 import { answerKeys } from './data/answerKeys';
 import type { Attempt } from './types/attempt';
@@ -63,13 +63,27 @@ export default function App() {
   const [grades, setGrades] = useLocalStorage<Record<string, boolean>>('toeic-grades', {});
   const [attempts, setAttempts] = useLocalStorage<Attempt[]>('toeic-attempts', []);
 
+  // Mobile responsive state
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      if (!mobile) setMobileSidebarOpen(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleAutoGrade = useCallback(() => {
     const keyAnswers = answerKeys[activeTestId];
     if (!keyAnswers) return;
 
     setGrades((prev) => {
       const updated = { ...prev };
-      for (let num = 1; num <= 100; num++) {
+      for (let num = 1; num <= 200; num++) {
         const key = `${activeTestId}-${num}`;
         const userAns = answers[key];
         if (userAns !== undefined) {
@@ -469,27 +483,61 @@ export default function App() {
       />
 
       <div className="flex flex-1 flex-row overflow-hidden">
-        {/* Sidebar */}
-        <Sidebar
-          width={sidebarWidth}
-          tests={config.tests}
-          activeTestId={activeTestId}
-          onSelectTest={handleSelectTest}
-          testProgress={testProgress}
-          theme={theme}
-          onThemeChange={setTheme}
-          bookTitle={config.bookTitle}
-        />
+        {/* Mobile Sidebar Overlay */}
+        {isMobile && mobileSidebarOpen && (
+          <div className="mobile-sidebar-overlay" onClick={() => setMobileSidebarOpen(false)} />
+        )}
 
-        {/* Resizable Divider bar */}
-        <div
-          onMouseDown={startResize}
-          className="w-1.5 cursor-col-resize bg-app-border/40 hover:bg-app-accent active:bg-app-accent/80 transition-colors duration-200 shrink-0"
-          title="Drag to resize sidebar"
-        />
+        {/* Sidebar */}
+        {(!isMobile || mobileSidebarOpen) && (
+          <div className={isMobile ? 'mobile-sidebar' : ''}>
+            <Sidebar
+              width={isMobile ? 260 : sidebarWidth}
+              tests={config.tests}
+              activeTestId={activeTestId}
+              onSelectTest={(id) => {
+                handleSelectTest(id);
+                if (isMobile) setMobileSidebarOpen(false);
+              }}
+              testProgress={testProgress}
+              theme={theme}
+              onThemeChange={setTheme}
+              bookTitle={config.bookTitle}
+            />
+          </div>
+        )}
+
+        {/* Resizable Divider bar (desktop only) */}
+        {!isMobile && (
+          <div
+            onMouseDown={startResize}
+            className="desktop-resize-handle w-1.5 cursor-col-resize bg-app-border/40 hover:bg-app-accent active:bg-app-accent/80 transition-colors duration-200 shrink-0"
+            title="Drag to resize sidebar"
+          />
+        )}
 
         {/* Workspace */}
         <div className="flex flex-1 flex-col overflow-hidden">
+          {/* Mobile Header Bar */}
+          {isMobile && (
+            <div className="flex h-10 items-center justify-between border-b border-app-border bg-app-card px-3 shrink-0">
+              <button
+                onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+                className="rounded p-1.5 text-app-text/70 hover:bg-app-hover transition-colors cursor-pointer"
+                title="Menu"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+              <span className="text-xs font-bold text-app-text/80">Test {activeTestId}</span>
+              <button
+                onClick={() => setShowAnswerSheet(!showAnswerSheet)}
+                className={`rounded p-1.5 transition-colors cursor-pointer ${showAnswerSheet ? 'text-app-accent bg-app-accent/10' : 'text-app-text/70 hover:bg-app-hover'}`}
+                title="Answer Sheet"
+              >
+                <Sparkles className="h-5 w-5" />
+              </button>
+            </div>
+          )}
           <Toolbar
             activeTab={activeTab}
             onTabChange={handleTabChange}
@@ -502,8 +550,8 @@ export default function App() {
             onOpenNotes={() => setNotesOpen(true)}
             testStatus={testProgress[activeTestId] || 'not-started'}
             onToggleStatus={handleToggleStatus}
-            isSplit={isSplit}
-            onToggleSplit={() => setIsSplit(!isSplit)}
+            isSplit={isMobile ? false : isSplit}
+            onToggleSplit={() => { if (!isMobile) setIsSplit(!isSplit); }}
             pdfUrl={getPdfUrl()}
             showAnswerSheet={showAnswerSheet}
             onToggleAnswerSheet={() => setShowAnswerSheet(!showAnswerSheet)}
@@ -641,18 +689,25 @@ export default function App() {
 
             {/* Answer Sheet Panel */}
             {showAnswerSheet && (
-              <AnswerSheet
-                testId={activeTestId}
-                answers={answers}
-                onAnswerChange={handleAnswerChange}
-                grades={grades}
-                onGradeChange={handleGradeChange}
-                onClearAnswers={handleClearAnswers}
-                onAutoGrade={handleAutoGrade}
-                attempts={attempts.filter((a) => a.testId === activeTestId)}
-                onSaveAttempt={handleSaveAttempt}
-                onDeleteAttempt={handleDeleteAttempt}
-              />
+              <>
+                {isMobile && (
+                  <div className="mobile-sidebar-overlay" onClick={() => setShowAnswerSheet(false)} />
+                )}
+                <div className={isMobile ? 'mobile-answer-sheet' : ''}>
+                  <AnswerSheet
+                    testId={activeTestId}
+                    answers={answers}
+                    onAnswerChange={handleAnswerChange}
+                    grades={grades}
+                    onGradeChange={handleGradeChange}
+                    onClearAnswers={handleClearAnswers}
+                    onAutoGrade={handleAutoGrade}
+                    attempts={attempts.filter((a) => a.testId === activeTestId)}
+                    onSaveAttempt={handleSaveAttempt}
+                    onDeleteAttempt={handleDeleteAttempt}
+                  />
+                </div>
+              </>
             )}
           </div>
         </div>

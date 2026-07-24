@@ -91,3 +91,41 @@ body {
   transform: rotateY(180deg);
 }
 
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  /* Mobile sidebar overlay */
+  .mobile-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+  }
+
+  .mobile-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 50;
+    width: 260px !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Mobile answer sheet overlay */
+  .mobile-answer-sheet {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    width: 320px !important;
+    max-width: 100vw;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Hide desktop resize handle */
+  .desktop-resize-handle {
+    display: none !important;
+  }
+}
