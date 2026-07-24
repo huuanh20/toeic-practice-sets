@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { AlertCircle, RefreshCw, ExternalLink } from 'lucide-react';
+import { AlertCircle, ExternalLink } from 'lucide-react';
 // @ts-ignore
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
@@ -55,20 +55,35 @@ export function PdfViewer({
 
   const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState<number>(0);
+  const [useIframeFallback, setUseIframeFallback] = useState<boolean>(false);
+
+  // Derive direct download URL for fallback iframe
+  const getDirectUrl = () => {
+    if (pdfUrl.includes('file=')) {
+      const fileName = pdfUrl.split('file=')[1];
+      return `https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/${fileName}`;
+    }
+    if (pdfUrl.startsWith('/cdn-media/')) {
+      const fileName = pdfUrl.replace('/cdn-media/', '');
+      return `https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/${fileName}`;
+    }
+    if (pdfUrl.startsWith('http://') || pdfUrl.startsWith('https://')) {
+      return pdfUrl;
+    }
+    return window.location.origin + pdfUrl;
+  };
 
   // Fetch PDF binary data to bypass Content-Type issues and CORS restrictions
   useEffect(() => {
     let isMounted = true;
     setIsLoading(true);
-    setFetchError(null);
+    setUseIframeFallback(false);
     setPdfData(null);
 
     fetch(pdfUrl)
       .then((res) => {
         if (!res.ok) {
-          throw new Error(`HTTP error ${res.status}: ${res.statusText}`);
+          throw new Error(`HTTP error ${res.status}`);
         }
         return res.arrayBuffer();
       })
@@ -80,8 +95,8 @@ export function PdfViewer({
       })
       .catch((err) => {
         if (isMounted) {
-          console.error("Error fetching PDF:", err);
-          setFetchError(err.message || "Không thể tải file PDF");
+          console.warn("Client pdf fetch error, switching to embedded viewer:", err);
+          setUseIframeFallback(true);
           setIsLoading(false);
         }
       });
@@ -89,7 +104,7 @@ export function PdfViewer({
     return () => {
       isMounted = false;
     };
-  }, [pdfUrl, reloadKey]);
+  }, [pdfUrl]);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
@@ -137,53 +152,53 @@ export function PdfViewer({
     };
   }, [zoom, onZoomChange, page, numPages, onPageChange]);
 
+  const directUrl = getDirectUrl();
+
   return (
     <div 
       ref={containerRef}
-      className="flex-1 overflow-auto bg-app-bg p-6 flex justify-center items-start border-l border-app-border"
+      className="flex-1 overflow-auto bg-app-bg p-4 md:p-6 flex justify-center items-start border-l border-app-border relative min-h-[500px]"
     >
-      <div className="w-full max-w-full flex flex-col items-center">
+      <div className="w-full h-full max-w-full flex flex-col items-center justify-center">
         {isLoading && <SkeletonPage />}
 
-        {fetchError && (
-          <div className="flex flex-col items-center justify-center py-16 px-4 gap-4 text-center">
-            <div className="p-3 bg-rose-500/10 rounded-full text-rose-500">
-              <AlertCircle className="h-8 w-8" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-base font-semibold text-app-text">Không thể hiển thị file PDF</span>
-              <span className="text-xs text-app-text-muted max-w-md">{fetchError}</span>
-            </div>
-            <div className="flex items-center gap-3 mt-2">
-              <button
-                onClick={() => setReloadKey((k) => k + 1)}
-                className="flex items-center gap-2 px-4 py-2 bg-app-card border border-app-border hover:bg-app-hover rounded-lg text-xs font-medium text-app-text transition-colors"
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-                Thử lại
-              </button>
+        {useIframeFallback && (
+          <div className="w-full h-[calc(100vh-140px)] min-h-[600px] flex flex-col rounded-lg overflow-hidden border border-app-border bg-app-card shadow-sm">
+            <div className="p-2 bg-app-hover border-b border-app-border flex items-center justify-between px-4">
+              <span className="text-xs font-medium text-app-text-muted">Chế độ xem nhúng Google Docs PDF Viewer</span>
               <a
-                href={pdfUrl}
+                href={directUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition-colors"
+                className="text-xs text-indigo-500 hover:underline flex items-center gap-1 font-medium"
               >
-                <ExternalLink className="h-3.5 w-3.5" />
-                Mở link trực tiếp
+                Tải file PDF gốc <ExternalLink className="h-3 w-3" />
               </a>
             </div>
+            <iframe
+              src={`https://docs.google.com/viewer?url=${encodeURIComponent(directUrl)}&embedded=true`}
+              className="w-full flex-1 border-0"
+              title="PDF Embedded Viewer"
+            />
           </div>
         )}
 
-        {!isLoading && !fetchError && pdfData && (
+        {!isLoading && !useIframeFallback && pdfData && (
           <Document
             file={{ data: pdfData }}
             onLoadSuccess={onDocumentLoadSuccess}
             loading={<SkeletonPage />}
+            onLoadError={() => setUseIframeFallback(true)}
             error={
-              <div className="flex flex-col items-center justify-center py-20 gap-2 text-rose-500 dark:text-rose-400">
-                <AlertCircle className="h-8 w-8" />
-                <span className="text-sm font-semibold">Lỗi cấu trúc PDF. Vui lòng mở lại trang.</span>
+              <div className="flex flex-col items-center justify-center py-16 px-4 gap-4 text-center">
+                <AlertCircle className="h-8 w-8 text-rose-500" />
+                <span className="text-sm font-semibold text-app-text">Đang chuyển sang giao diện đọc PDF dự phòng...</span>
+                <button
+                  onClick={() => setUseIframeFallback(true)}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-medium"
+                >
+                  Xem qua Google Docs Viewer
+                </button>
               </div>
             }
           >
