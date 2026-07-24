@@ -37,3 +37,5 @@ public/library/*.pdf
 
 # Answer keys (keep local only)
 src/data/answerKeys.ts
+
+.vercel
