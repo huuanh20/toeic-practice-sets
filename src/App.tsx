@@ -237,7 +237,7 @@ export default function App() {
 
   // PDF URL Resolver
   const getPdfUrl = () => {
-    if (activeTab === 'practice') return resolveMediaUrl(config.practicePdf);
+    if (activeTab === 'practice') return resolveMediaUrl(activeTest.practicePdf || config.practicePdf);
     if (activeTab === 'transcript') return resolveMediaUrl(config.transcriptPdf);
     return resolveMediaUrl(config.vocabularyPdf);
   };

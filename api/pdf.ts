@@ -17,7 +17,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ? file
     : `https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/${file}`;
 
-  const fetchHeaders: Record<string, string> = {};
+  const fetchHeaders: Record<string, string> = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  };
+
   if (req.headers.range) {
     fetchHeaders['Range'] = req.headers.range as string;
   }
