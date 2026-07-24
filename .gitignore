@@ -34,7 +34,5 @@ public/library/*.mp3
 public/library/*.pdf
 Đáp án Practice Tests.pdf
 
-# Answer keys (keep local only)
-src/data/answerKeys.ts
-
+# Vercel output
 .vercel
