@@ -53,9 +53,57 @@ export function PdfViewer({
   const containerRef = useRef<HTMLDivElement>(null);
   const lastPageChangeTime = useRef<number>(0);
   const [hasLoadError, setHasLoadError] = useState<boolean>(false);
+  const [cachedPdfUrl, setCachedPdfUrl] = useState<string | null>(null);
 
+  // Cache PDF using browser Cache API for instant re-loads
   useEffect(() => {
     setHasLoadError(false);
+    setCachedPdfUrl(null);
+
+    if (!pdfUrl) return;
+
+    let cancelled = false;
+    const CACHE_NAME = 'toeic-pdf-cache-v1';
+
+    (async () => {
+      try {
+        const cache = await caches.open(CACHE_NAME);
+        const fullUrl = new URL(pdfUrl, window.location.origin).href;
+        
+        // Check cache first
+        const cachedResponse = await cache.match(fullUrl);
+        if (cachedResponse) {
+          const blob = await cachedResponse.blob();
+          if (!cancelled) {
+            setCachedPdfUrl(URL.createObjectURL(blob));
+          }
+          return;
+        }
+
+        // Not cached — fetch, cache, and use
+        const response = await fetch(fullUrl);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const blob = await response.blob();
+        // Store in cache for next time
+        await cache.put(fullUrl, new Response(blob.slice(0), {
+          headers: { 'Content-Type': 'application/pdf' }
+        }));
+
+        if (!cancelled) {
+          setCachedPdfUrl(URL.createObjectURL(blob));
+        }
+      } catch {
+        // Fallback: use original URL directly
+        if (!cancelled) {
+          setCachedPdfUrl(pdfUrl);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [pdfUrl]);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
@@ -111,9 +159,9 @@ export function PdfViewer({
       className="flex-1 overflow-auto bg-app-bg p-4 md:p-6 flex justify-center items-start border-l border-app-border relative min-h-[500px]"
     >
       <div className="w-full h-full max-w-full flex flex-col items-center justify-center">
-        {!hasLoadError ? (
+        {!hasLoadError && cachedPdfUrl ? (
           <Document
-            file={pdfUrl}
+            file={cachedPdfUrl}
             onLoadSuccess={onDocumentLoadSuccess}
             loading={<SkeletonPage />}
             onLoadError={(err) => {
@@ -173,7 +221,7 @@ export function PdfViewer({
               <SkeletonPage />
             )}
           </Document>
-        ) : (
+        ) : hasLoadError ? (
           <div className="w-full h-[calc(100vh-140px)] min-h-[600px] flex flex-col rounded-lg overflow-hidden border border-app-border bg-app-card shadow-sm">
             <div className="p-2 bg-app-hover border-b border-app-border flex items-center justify-between px-4">
               <span className="text-xs font-medium text-app-text-muted">Chế độ đọc PDF nhúng trực tiếp</span>
@@ -192,6 +240,8 @@ export function PdfViewer({
               title="PDF Embedded Viewer"
             />
           </div>
+        ) : (
+          <SkeletonPage />
         )}
       </div>
     </div>
