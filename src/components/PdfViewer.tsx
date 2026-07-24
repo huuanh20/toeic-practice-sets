@@ -4,7 +4,7 @@ import { AlertCircle, ExternalLink } from 'lucide-react';
 // @ts-ignore
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-import 'react-pdf/dist/Page/TextLayer.css';
+
 
 // Configure the PDFJS worker locally (offline-capable)
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
@@ -134,14 +134,41 @@ export function PdfViewer({
             }
           >
             {numPages > 0 && page <= numPages ? (
-              <Page 
-                pageNumber={page} 
-                scale={zoom}
-                renderTextLayer={true}
-                renderAnnotationLayer={false}
-                loading={null}
-                devicePixelRatio={Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio : 1)}
-              />
+              <>
+                <Page 
+                  pageNumber={page} 
+                  scale={zoom}
+                  renderTextLayer={false}
+                  renderAnnotationLayer={false}
+                  loading={null}
+                  devicePixelRatio={Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio : 1)}
+                />
+                {/* Preload adjacent pages off-screen for instant transitions */}
+                {page < numPages && (
+                  <div style={{ position: 'absolute', left: '-9999px', top: 0, visibility: 'hidden' }} aria-hidden="true">
+                    <Page 
+                      pageNumber={page + 1} 
+                      scale={zoom}
+                      renderTextLayer={false}
+                      renderAnnotationLayer={false}
+                      loading={null}
+                      devicePixelRatio={1}
+                    />
+                  </div>
+                )}
+                {page > 1 && (
+                  <div style={{ position: 'absolute', left: '-9999px', top: 0, visibility: 'hidden' }} aria-hidden="true">
+                    <Page 
+                      pageNumber={page - 1} 
+                      scale={zoom}
+                      renderTextLayer={false}
+                      renderAnnotationLayer={false}
+                      loading={null}
+                      devicePixelRatio={1}
+                    />
+                  </div>
+                )}
+              </>
             ) : (
               <SkeletonPage />
             )}
