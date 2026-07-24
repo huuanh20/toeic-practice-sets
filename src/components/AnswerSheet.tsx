@@ -359,19 +359,27 @@ export function AnswerSheet({
       <div className="flex flex-col border-b border-app-border bg-app-bg/50 p-2 gap-2 shrink-0">
         <div className="flex gap-1 bg-app-bg p-0.5 rounded-lg border border-app-border">
           <button
-            onClick={() => setTab('doing')}
+            onClick={() => {
+              if (isGradingRevealed) return; // Locked after grading
+              setTab('doing');
+            }}
             className={`flex-1 rounded-md py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
               tab === 'doing'
                 ? 'bg-app-accent text-white shadow-xs'
+                : isGradingRevealed
+                ? 'text-app-text/30 cursor-not-allowed'
                 : 'text-app-text/60 hover:bg-app-hover'
             }`}
+            disabled={isGradingRevealed}
+            title={isGradingRevealed ? 'Đã chấm điểm — hãy nộp bài trước khi làm lại' : ''}
           >
-            Doing
+            {isGradingRevealed ? '🔒 Doing' : 'Doing'}
           </button>
           <button
             onClick={() => {
               setTab('grading');
-              setIsGradingRevealed(false);
+              // Only reset reveal if not yet revealed
+              if (!isGradingRevealed) setIsGradingRevealed(false);
             }}
             className={`flex-1 rounded-md py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
               tab === 'grading'
@@ -794,7 +802,8 @@ export function AnswerSheet({
               <button
                 onClick={() => {
                   setTab('grading');
-                  setIsGradingRevealed(false);
+                  if (onAutoGrade) onAutoGrade();
+                  setIsGradingRevealed(true);
                 }}
                 className="text-app-accent hover:underline flex items-center gap-1 cursor-pointer font-bold"
               >
