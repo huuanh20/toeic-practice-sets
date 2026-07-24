@@ -133,14 +133,18 @@ export function PdfViewer({
               </div>
             }
           >
-            <Page 
-              pageNumber={page} 
-              scale={zoom}
-              renderTextLayer={true}
-              renderAnnotationLayer={false}
-              loading={null}
-              devicePixelRatio={Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio : 1)}
-            />
+            {numPages > 0 && page <= numPages ? (
+              <Page 
+                pageNumber={page} 
+                scale={zoom}
+                renderTextLayer={true}
+                renderAnnotationLayer={false}
+                loading={null}
+                devicePixelRatio={Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio : 1)}
+              />
+            ) : (
+              <SkeletonPage />
+            )}
           </Document>
         ) : (
           <div className="w-full h-[calc(100vh-140px)] min-h-[600px] flex flex-col rounded-lg overflow-hidden border border-app-border bg-app-card shadow-sm">

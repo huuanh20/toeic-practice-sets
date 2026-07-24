@@ -28,19 +28,28 @@ export default function App() {
   // PDF Read Position Memory: Record<`${testId}-${tab}`, { page: number; zoom: number }>
   const [pdfPositions, setPdfPositions] = useLocalStorage<Record<string, { page: number; zoom: number }>>('toeic-pdf-positions', {});
 
+  // One-time migration: clear stale positions from old single-PDF layout
+  useEffect(() => {
+    const migrated = localStorage.getItem('toeic-pdf-positions-migrated-v2');
+    if (!migrated) {
+      setPdfPositions({});
+      localStorage.setItem('toeic-pdf-positions-migrated-v2', 'true');
+    }
+  }, []);
+
   // Recent Session State
   const [recent, setRecent] = useLocalStorage<{
     testId: number;
     tab: 'practice' | 'transcript' | 'vocabulary';
     page: number;
-  }>('toeic-recent', { testId: 1, tab: 'practice', page: 2 });
+  }>('toeic-recent', { testId: 1, tab: 'practice', page: 1 });
 
   // Transient/Runtime States
   const [activeTestId, setActiveTestId] = useState(recent.testId);
   const [activeTab, setActiveTab] = useState(recent.tab);
   
-  // Set initial page and zoom from memory
-  const [page, setPage] = useState(recent.page);
+  // Set initial page and zoom from memory (clamp to safe default)
+  const [page, setPage] = useState(Math.min(recent.page, 200));
   const [zoom, setZoom] = useState(1.0);
   const [numPages, setNumPages] = useState(0);
   
@@ -152,6 +161,9 @@ export default function App() {
     const key = `${activeTestId}-${activeTab}`;
     const saved = pdfPositions[key];
 
+    // Reset numPages so stale count from previous PDF doesn't persist
+    setNumPages(0);
+
     if (saved) {
       setPage(saved.page);
       setZoom(saved.zoom);
@@ -164,6 +176,13 @@ export default function App() {
       setZoom(1.0);
     }
   }, [activeTestId, activeTab, config]);
+
+  // Clamp page to valid range once numPages is known after PDF loads
+  useEffect(() => {
+    if (numPages > 0 && page > numPages) {
+      setPage(numPages);
+    }
+  }, [numPages, page]);
 
 
   // Global Keyboard Shortcuts (Ctrl+K, Fullscreen 'F', PageUp/PageDown)
