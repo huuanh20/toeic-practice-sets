@@ -226,10 +226,10 @@ export default function App() {
 
   const activeTest = config.tests.find((t) => t.id === activeTestId) || config.tests[0];
 
-  // Media URL Resolver (supports remote URLs like GitHub Releases or local /library/ files)
+  // Media URL Resolver (supports /cdn-media/ proxy, remote URLs, or local /library/ files)
   const resolveMediaUrl = (fileOrUrl: string) => {
     if (!fileOrUrl) return '';
-    if (fileOrUrl.startsWith('http://') || fileOrUrl.startsWith('https://')) {
+    if (fileOrUrl.startsWith('http://') || fileOrUrl.startsWith('https://') || fileOrUrl.startsWith('/')) {
       return fileOrUrl;
     }
     return `/library/${fileOrUrl}`;

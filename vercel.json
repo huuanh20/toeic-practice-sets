@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/cdn-media/:path*",
+      "destination": "https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/:path*"
+    }
+  ]
+}
