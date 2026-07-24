@@ -1,6 +1,6 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw, ExternalLink } from 'lucide-react';
 // @ts-ignore
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
@@ -36,7 +36,7 @@ const SkeletonPage = () => (
       <div className="h-4 w-4/5 bg-app-hover rounded-md" />
     </div>
     <div className="flex-1 bg-app-hover rounded-md flex items-center justify-center text-app-text/30 font-medium text-xs">
-      Loading PDF Content...
+      Đang tải dữ liệu PDF...
     </div>
   </div>
 );
@@ -52,6 +52,44 @@ export function PdfViewer({
 }: PdfViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const lastPageChangeTime = useRef<number>(0);
+
+  const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState<number>(0);
+
+  // Fetch PDF binary data to bypass Content-Type issues and CORS restrictions
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+    setFetchError(null);
+    setPdfData(null);
+
+    fetch(pdfUrl)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error ${res.status}: ${res.statusText}`);
+        }
+        return res.arrayBuffer();
+      })
+      .then((buffer) => {
+        if (isMounted) {
+          setPdfData(new Uint8Array(buffer));
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          console.error("Error fetching PDF:", err);
+          setFetchError(err.message || "Không thể tải file PDF");
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [pdfUrl, reloadKey]);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
@@ -71,9 +109,8 @@ export function PdfViewer({
           : Math.max(0.5, zoom - zoomStep);
         onZoomChange(newZoom);
       } else {
-        // Page transition on scroll wheel when reaching top/bottom
         const now = Date.now();
-        if (now - lastPageChangeTime.current < 600) return; // 600ms cooldown for smooth transitions
+        if (now - lastPageChangeTime.current < 600) return;
 
         const isAtBottom = Math.abs(container.scrollHeight - container.clientHeight - container.scrollTop) < 10;
         const isAtTop = container.scrollTop === 0;
@@ -106,26 +143,60 @@ export function PdfViewer({
       className="flex-1 overflow-auto bg-app-bg p-6 flex justify-center items-start border-l border-app-border"
     >
       <div className="w-full max-w-full flex flex-col items-center">
-        <Document
-          file={pdfUrl}
-          onLoadSuccess={onDocumentLoadSuccess}
-          loading={<SkeletonPage />}
-          error={
-            <div className="flex flex-col items-center justify-center py-20 gap-2 text-rose-500 dark:text-rose-400">
+        {isLoading && <SkeletonPage />}
+
+        {fetchError && (
+          <div className="flex flex-col items-center justify-center py-16 px-4 gap-4 text-center">
+            <div className="p-3 bg-rose-500/10 rounded-full text-rose-500">
               <AlertCircle className="h-8 w-8" />
-              <span className="text-sm font-semibold">Failed to load PDF library. Ensure PDF exists at {pdfUrl}</span>
             </div>
-          }
-        >
-          <Page 
-            pageNumber={page} 
-            scale={zoom}
-            renderTextLayer={true}
-            renderAnnotationLayer={false}
-            loading={null}
-            devicePixelRatio={Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio : 1)}
-          />
-        </Document>
+            <div className="flex flex-col gap-1">
+              <span className="text-base font-semibold text-app-text">Không thể hiển thị file PDF</span>
+              <span className="text-xs text-app-text-muted max-w-md">{fetchError}</span>
+            </div>
+            <div className="flex items-center gap-3 mt-2">
+              <button
+                onClick={() => setReloadKey((k) => k + 1)}
+                className="flex items-center gap-2 px-4 py-2 bg-app-card border border-app-border hover:bg-app-hover rounded-lg text-xs font-medium text-app-text transition-colors"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Thử lại
+              </button>
+              <a
+                href={pdfUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition-colors"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Mở link trực tiếp
+              </a>
+            </div>
+          </div>
+        )}
+
+        {!isLoading && !fetchError && pdfData && (
+          <Document
+            file={{ data: pdfData }}
+            onLoadSuccess={onDocumentLoadSuccess}
+            loading={<SkeletonPage />}
+            error={
+              <div className="flex flex-col items-center justify-center py-20 gap-2 text-rose-500 dark:text-rose-400">
+                <AlertCircle className="h-8 w-8" />
+                <span className="text-sm font-semibold">Lỗi cấu trúc PDF. Vui lòng mở lại trang.</span>
+              </div>
+            }
+          >
+            <Page 
+              pageNumber={page} 
+              scale={zoom}
+              renderTextLayer={true}
+              renderAnnotationLayer={false}
+              loading={null}
+              devicePixelRatio={Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio : 1)}
+            />
+          </Document>
+        )}
       </div>
     </div>
   );
