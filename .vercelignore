@@ -1,4 +1,5 @@
 # Ignore heavy media files from Vercel deployment uploads
+media_storage/
 public/library/*.mp3
 public/library/*.pdf
 AUDIO-SÁCH PRACTICE SETS/

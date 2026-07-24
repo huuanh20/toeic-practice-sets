@@ -29,8 +29,7 @@ dist-ssr
 scratch/
 .oxlintrc.json
 
-# Large media / audio files
-AUDIO-SÁCH PRACTICE SETS/
+media_storage/
 public/library/*.mp3
 public/library/*.pdf
 Đáp án Practice Tests.pdf
