@@ -72,6 +72,7 @@ export function AnswerSheet({
 }: AnswerSheetProps) {
   const [tab, setTab] = useState<'doing' | 'grading' | 'history'>('doing');
   const [showOnlyWrong, setShowOnlyWrong] = useState<boolean>(false);
+  const [isGradingRevealed, setIsGradingRevealed] = useState<boolean>(false);
   const [selectedAttemptId, setSelectedAttemptId] = useState<string | null>(null);
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -172,6 +173,7 @@ export function AnswerSheet({
   useEffect(() => {
     setTab('doing');
     setSelectedAttemptId(null);
+    setIsGradingRevealed(false);
   }, [testId]);
 
   // Sync / Load Timer on Test change or mount
@@ -369,7 +371,7 @@ export function AnswerSheet({
           <button
             onClick={() => {
               setTab('grading');
-              if (onAutoGrade) onAutoGrade();
+              setIsGradingRevealed(false);
             }}
             className={`flex-1 rounded-md py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
               tab === 'grading'
@@ -390,13 +392,28 @@ export function AnswerSheet({
             History
           </button>
         </div>
-        {isGrading && (
+        {isGrading && isGradingRevealed && (
           <div className={`text-[10px] text-center font-medium py-1 rounded select-text ${
             hasKey ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/5' : 'text-amber-600 dark:text-amber-400 bg-amber-500/5'
           }`}>
             {hasKey 
               ? '✨ Đã tự động chấm điểm theo đáp án chuẩn!' 
               : '⚠️ Chưa có đáp án tự động cho Test này (Tự chấm bằng nút Check/X)'}
+          </div>
+        )}
+        {isGrading && !isGradingRevealed && (
+          <div className="flex flex-col items-center gap-2 py-3">
+            <span className="text-[10px] text-app-text/50 font-medium">Bấm nút bên dưới để xem kết quả chấm điểm</span>
+            <button
+              onClick={() => {
+                if (onAutoGrade) onAutoGrade();
+                setIsGradingRevealed(true);
+              }}
+              className="flex items-center gap-1.5 rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-white hover:bg-amber-600 active:scale-98 transition-all cursor-pointer shadow-xs"
+            >
+              <CheckCircle className="h-4 w-4" />
+              Bắt đầu chấm điểm
+            </button>
           </div>
         )}
       </div>
@@ -658,8 +675,8 @@ export function AnswerSheet({
             const num = i + 1;
             const header = sectionHeaders[num];
 
-            // Filter: only show wrong answers in grading mode
-            if (showOnlyWrong && isGrading) {
+            // Filter: only show wrong answers in grading mode (after reveal)
+            if (showOnlyWrong && isGrading && isGradingRevealed) {
               const key = getAnswerKey(num);
               const grade = grades[key];
               if (grade !== false) {
@@ -689,13 +706,14 @@ export function AnswerSheet({
               );
             }
 
+            const showGradeResult = isGradingRevealed && isGrading;
             elements.push(
               <div 
                 key={num}
                 className={`flex items-center justify-between rounded-lg p-2 transition-all ${
-                  grade === true 
+                  showGradeResult && grade === true 
                     ? 'bg-emerald-500/10 border border-emerald-500/20' 
-                    : grade === false
+                    : showGradeResult && grade === false
                     ? 'bg-rose-500/10 border border-rose-500/20'
                     : 'bg-app-bg border border-app-border/40 hover:border-app-border'
                 }`}
@@ -703,8 +721,8 @@ export function AnswerSheet({
                 {/* Question Number */}
                 <div className="flex items-center gap-1.5 w-12">
                   <span className="text-xs font-bold text-app-text/50">{num.toString().padStart(3, '0')}.</span>
-                  {grade === true && <Check className="h-3.5 w-3.5 text-emerald-500 stroke-[3]" />}
-                  {grade === false && <X className="h-3.5 w-3.5 text-rose-500 stroke-[3]" />}
+                  {showGradeResult && grade === true && <Check className="h-3.5 w-3.5 text-emerald-500 stroke-[3]" />}
+                  {showGradeResult && grade === false && <X className="h-3.5 w-3.5 text-rose-500 stroke-[3]" />}
                 </div>
 
                 {/* Answers A, B, C, D */}
@@ -725,9 +743,9 @@ export function AnswerSheet({
                   ))}
                 </div>
 
-                {/* Grading Buttons (only in Grading mode) + correct answer hint */}
+                {/* Grading Buttons (only in Grading mode after reveal) + correct answer hint */}
                 <div className="w-14 flex justify-end gap-1">
-                  {isGrading && selectedAns && (
+                  {isGrading && isGradingRevealed && selectedAns && (
                     <>
                       {grade === false && (
                         <span className="text-[9px] font-bold text-emerald-500 mr-0.5" title="Đáp án đúng">
@@ -776,7 +794,7 @@ export function AnswerSheet({
               <button
                 onClick={() => {
                   setTab('grading');
-                  if (onAutoGrade) onAutoGrade();
+                  setIsGradingRevealed(false);
                 }}
                 className="text-app-accent hover:underline flex items-center gap-1 cursor-pointer font-bold"
               >
@@ -801,62 +819,80 @@ export function AnswerSheet({
           </div>
         ) : tab === 'grading' ? (
           <div className="flex flex-col gap-2.5">
-            {/* Score Stats */}
-            <div className="flex items-center justify-between text-xs font-bold text-app-text/70">
-              <span className="text-emerald-600">Correct: {correctCount}</span>
-              <span className="text-rose-600">Incorrect: {incorrectCount}</span>
-              <span className="text-app-text/40">Un-graded: {TOTAL_QUESTIONS - correctCount - incorrectCount}</span>
-            </div>
-
-            {/* Filter wrong answers toggle */}
-            <button
-              onClick={() => setShowOnlyWrong(!showOnlyWrong)}
-              className={`flex w-full items-center justify-center gap-1.5 rounded-lg border py-1.5 text-[11px] font-bold transition-all cursor-pointer ${
-                showOnlyWrong
-                  ? 'border-rose-500/30 bg-rose-500/10 text-rose-600'
-                  : 'border-app-border bg-app-bg text-app-text/60 hover:bg-app-hover'
-              }`}
-            >
-              <Filter className="h-3.5 w-3.5" />
-              {showOnlyWrong ? 'Đang lọc: Chỉ câu sai' : 'Lọc xem câu sai'}
-            </button>
-            
-            {/* Estimate Score Output */}
-            <div className="flex flex-col gap-1.5 rounded-lg bg-app-accent/10 border border-app-accent/20 p-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-app-text/60">🎧 Listening:</span>
-                <span className="text-xs font-extrabold text-app-accent">{listeningScore} / 495</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-app-text/60">📖 Reading:</span>
-                <span className="text-xs font-extrabold text-app-accent">{readingScore} / 495</span>
-              </div>
-              <div className="flex items-center justify-between border-t border-app-accent/20 pt-1.5">
-                <div className="flex items-center gap-1.5">
-                  <Award className="h-4 w-4 text-app-accent" />
-                  <span className="text-xs font-bold text-app-text">Total TOEIC:</span>
+            {isGradingRevealed ? (
+              <>
+                {/* Score Stats */}
+                <div className="flex items-center justify-between text-xs font-bold text-app-text/70">
+                  <span className="text-emerald-600">Correct: {correctCount}</span>
+                  <span className="text-rose-600">Incorrect: {incorrectCount}</span>
+                  <span className="text-app-text/40">Un-graded: {TOTAL_QUESTIONS - correctCount - incorrectCount}</span>
                 </div>
-                <span className="text-base font-extrabold text-app-accent">{totalScore} / 990</span>
-              </div>
-            </div>
 
-            {/* Save & Reset Button */}
-            <button
-              onClick={() => {
-                setConfirmModal({
-                  isOpen: true,
-                  message: "Lưu lịch sử bài làm này và reset để làm lại từ đầu?",
-                  onConfirm: () => {
-                    onSaveAttempt(correctCount, incorrectCount, totalScore);
-                    setTab('history');
-                  }
-                });
-              }}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-app-accent py-2 text-xs font-bold text-white hover:opacity-90 active:scale-98 transition-all cursor-pointer shadow-xs mt-1"
-            >
-              <CheckCircle className="h-4 w-4 animate-pulse" />
-              Nộp bài & Lưu lịch sử
-            </button>
+                {/* Filter wrong answers toggle */}
+                <button
+                  onClick={() => setShowOnlyWrong(!showOnlyWrong)}
+                  className={`flex w-full items-center justify-center gap-1.5 rounded-lg border py-1.5 text-[11px] font-bold transition-all cursor-pointer ${
+                    showOnlyWrong
+                      ? 'border-rose-500/30 bg-rose-500/10 text-rose-600'
+                      : 'border-app-border bg-app-bg text-app-text/60 hover:bg-app-hover'
+                  }`}
+                >
+                  <Filter className="h-3.5 w-3.5" />
+                  {showOnlyWrong ? 'Đang lọc: Chỉ câu sai' : 'Lọc xem câu sai'}
+                </button>
+                
+                {/* Estimate Score Output */}
+                <div className="flex flex-col gap-1.5 rounded-lg bg-app-accent/10 border border-app-accent/20 p-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-app-text/60">🎧 Listening:</span>
+                    <span className="text-xs font-extrabold text-app-accent">{listeningScore} / 495</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-app-text/60">📖 Reading:</span>
+                    <span className="text-xs font-extrabold text-app-accent">{readingScore} / 495</span>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-app-accent/20 pt-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <Award className="h-4 w-4 text-app-accent" />
+                      <span className="text-xs font-bold text-app-text">Total TOEIC:</span>
+                    </div>
+                    <span className="text-base font-extrabold text-app-accent">{totalScore} / 990</span>
+                  </div>
+                </div>
+
+                {/* Save & Reset Button */}
+                <button
+                  onClick={() => {
+                    setConfirmModal({
+                      isOpen: true,
+                      message: "Lưu lịch sử bài làm này và reset để làm lại từ đầu?",
+                      onConfirm: () => {
+                        onSaveAttempt(correctCount, incorrectCount, totalScore);
+                        setTab('history');
+                      }
+                    });
+                  }}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-app-accent py-2 text-xs font-bold text-white hover:opacity-90 active:scale-98 transition-all cursor-pointer shadow-xs mt-1"
+                >
+                  <CheckCircle className="h-4 w-4 animate-pulse" />
+                  Nộp bài & Lưu lịch sử
+                </button>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-2 py-2">
+                <span className="text-xs text-app-text/50 font-medium">Đã trả lời: {answeredCount} / {TOTAL_QUESTIONS}</span>
+                <button
+                  onClick={() => {
+                    if (onAutoGrade) onAutoGrade();
+                    setIsGradingRevealed(true);
+                  }}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-amber-500 py-2 text-xs font-bold text-white hover:bg-amber-600 active:scale-98 transition-all cursor-pointer shadow-xs"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  Bắt đầu chấm điểm
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex items-center justify-between text-[11px] text-app-text/50 font-medium">
