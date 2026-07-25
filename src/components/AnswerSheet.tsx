@@ -99,75 +99,7 @@ export function AnswerSheet({
     return readingScoreTable[Math.min(correctCount, 100)] ?? 5;
   };
 
-  const [timeLeft, setTimeLeft] = useState<number>(45 * 60);
-  const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
 
-  // Format seconds to MM:SS
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const startTimer = () => {
-    const expiration = Date.now() + timeLeft * 1000;
-    localStorage.setItem(`toeic-timer-expiration-${testId}`, expiration.toString());
-    setIsTimerRunning(true);
-  };
-
-  const pauseTimer = () => {
-    setIsTimerRunning(false);
-    localStorage.removeItem(`toeic-timer-expiration-${testId}`);
-    localStorage.setItem(`toeic-timer-left-${testId}`, timeLeft.toString());
-  };
-
-  const handleTimeUp = () => {
-    // 1. Trigger auto grading
-    if (onAutoGrade) onAutoGrade();
-    
-    // 2. Compute stats synchronously
-    const keyAnswers = answerKeys[testId];
-    let correct = 0;
-    let incorrect = 0;
-    for (let num = 1; num <= TOTAL_QUESTIONS; num++) {
-      const qKey = `${testId}-${num}`;
-      const userAns = answers[qKey];
-      if (userAns !== undefined) {
-        const correctAns = keyAnswers?.[num];
-        if (correctAns && userAns === correctAns) {
-          correct++;
-        } else {
-          incorrect++;
-        }
-      }
-    }
-    // Compute listening + reading correct counts
-    let lCorrect = 0;
-    let rCorrect = 0;
-    for (let num = 1; num <= TOTAL_QUESTIONS; num++) {
-      const qKey = `${testId}-${num}`;
-      const userAns = answers[qKey];
-      if (userAns !== undefined) {
-        const correctAns = keyAnswers?.[num];
-        if (correctAns && userAns === correctAns) {
-          if (num <= LISTENING_END) lCorrect++;
-          else rCorrect++;
-        }
-      }
-    }
-    const score = estimateListeningScore(lCorrect) + estimateReadingScore(rCorrect);
-
-    // 3. Save attempt to history & reset sheet
-    onSaveAttempt(correct, incorrect, score);
-    setTab('history');
-
-    // 4. Show custom modal warning
-    setConfirmModal({
-      isOpen: true,
-      message: "⏰ Hết giờ 45 phút! Bài làm của bạn đã tự động được nộp và chấm điểm.",
-      onConfirm: () => {}
-    });
-  };
 
   // Reset tab and details when test changes
   useEffect(() => {
@@ -176,85 +108,7 @@ export function AnswerSheet({
     setIsGradingRevealed(false);
   }, [testId]);
 
-  // Sync / Load Timer on Test change or mount
-  useEffect(() => {
-    const savedTime = localStorage.getItem(`toeic-timer-left-${testId}`);
-    const savedExpiration = localStorage.getItem(`toeic-timer-expiration-${testId}`);
-
-    if (savedExpiration) {
-      const expiration = parseInt(savedExpiration, 10);
-      const remaining = Math.max(0, Math.ceil((expiration - Date.now()) / 1000));
-      if (remaining > 0) {
-        setTimeLeft(remaining);
-        setIsTimerRunning(true);
-        return;
-      } else {
-        setTimeLeft(0);
-        setIsTimerRunning(false);
-        handleTimeUp();
-        return;
-      }
-    }
-
-    if (savedTime) {
-      setTimeLeft(parseInt(savedTime, 10));
-    } else {
-      setTimeLeft(45 * 60);
-    }
-    setIsTimerRunning(false);
-  }, [testId]);
-
-  // Tick effect
-  useEffect(() => {
-    if (!isTimerRunning) return;
-
-    const interval = setInterval(() => {
-      const savedExpiration = localStorage.getItem(`toeic-timer-expiration-${testId}`);
-      if (savedExpiration) {
-        const expiration = parseInt(savedExpiration, 10);
-        const remaining = Math.max(0, Math.ceil((expiration - Date.now()) / 1000));
-        if (remaining <= 0) {
-          setTimeLeft(0);
-          setIsTimerRunning(false);
-          localStorage.removeItem(`toeic-timer-expiration-${testId}`);
-          localStorage.removeItem(`toeic-timer-left-${testId}`);
-          clearInterval(interval);
-          handleTimeUp();
-        } else {
-          setTimeLeft(remaining);
-        }
-      } else {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            setIsTimerRunning(false);
-            clearInterval(interval);
-            handleTimeUp();
-            return 0;
-          }
-          localStorage.setItem(`toeic-timer-left-${testId}`, (prev - 1).toString());
-          return prev - 1;
-        });
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isTimerRunning, testId]);
-
-  // Reset timer state when answers are cleared (e.g. answers for testId become empty)
-  useEffect(() => {
-    const activeTestAnswers = Object.keys(answers).filter(k => k.startsWith(`${testId}-`));
-    if (activeTestAnswers.length === 0) {
-      setTimeLeft(45 * 60);
-      setIsTimerRunning(false);
-      localStorage.removeItem(`toeic-timer-left-${testId}`);
-      localStorage.removeItem(`toeic-timer-expiration-${testId}`);
-    }
-  }, [answers, testId]);
-
   const handleAnswerSelect = (num: number, ans: 'A' | 'B' | 'C' | 'D' | null) => {
-    if (!isTimerRunning && timeLeft > 0 && tab === 'doing') {
-      startTimer();
-    }
     onAnswerChange(num, ans);
   };
 
@@ -328,32 +182,7 @@ export function AnswerSheet({
         </button>
       </div>
 
-      {/* Timer Bar */}
-      {tab === 'doing' && (
-        <div className="flex items-center justify-between border-b border-app-border bg-app-card px-4 py-2 shrink-0">
-          <div className="flex items-center gap-2">
-            <span className={`flex h-2 w-2 rounded-full ${isTimerRunning ? 'bg-emerald-500 animate-ping' : 'bg-amber-500'}`}></span>
-            <span className="text-xs font-bold text-app-text/70 uppercase tracking-wider">Thời gian nghe:</span>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <span className={`text-sm font-mono font-extrabold tracking-wider ${timeLeft <= 60 ? 'text-rose-500 animate-pulse' : 'text-app-accent'}`}>
-              {formatTime(timeLeft)}
-            </span>
-            
-            <button
-              onClick={isTimerRunning ? pauseTimer : startTimer}
-              className={`rounded px-2.5 py-1 text-[10px] font-bold border transition-all cursor-pointer shadow-xs ${
-                isTimerRunning
-                  ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20'
-                  : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20'
-              }`}
-            >
-              {isTimerRunning ? 'Tạm dừng' : 'Bắt đầu'}
-            </button>
-          </div>
-        </div>
-      )}
+
 
       {/* Mode Selector */}
       <div className="flex flex-col border-b border-app-border bg-app-bg/50 p-2 gap-2 shrink-0">
