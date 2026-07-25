@@ -6,42 +6,42 @@
   "tests": [
     {
       "id": 1,
-      "audio": "/cdn-media/Test.1.mp3",
+      "audio": "https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/Test.1.mp3",
       "practicePdf": "/api/pdf?file=Test_1_Practice.pdf",
       "practicePage": 1,
       "transcriptPage": 2
     },
     {
       "id": 2,
-      "audio": "/cdn-media/Test.2.mp3",
+      "audio": "https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/Test.2.mp3",
       "practicePdf": "/api/pdf?file=Test_2_Practice.pdf",
       "practicePage": 1,
       "transcriptPage": 31
     },
     {
       "id": 3,
-      "audio": "/cdn-media/Test.3.mp3",
+      "audio": "https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/Test.3.mp3",
       "practicePdf": "/api/pdf?file=Test_3_Practice.pdf",
       "practicePage": 1,
       "transcriptPage": 61
     },
     {
       "id": 4,
-      "audio": "/cdn-media/Test.4.mp3",
+      "audio": "https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/Test.4.mp3",
       "practicePdf": "/api/pdf?file=Test_4_Practice.pdf",
       "practicePage": 1,
       "transcriptPage": 91
     },
     {
       "id": 5,
-      "audio": "/cdn-media/Test.5.mp3",
+      "audio": "https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/Test.5.mp3",
       "practicePdf": "/api/pdf?file=Test_5_Practice.pdf",
       "practicePage": 1,
       "transcriptPage": 121
     },
     {
       "id": 6,
-      "audio": "/cdn-media/Test.6.mp3",
+      "audio": "https://github.com/huuanh20/toeic-practice-sets/releases/download/v1.0.0/Test.6.mp3",
       "practicePdf": "/api/pdf?file=Test_6_Practice.pdf",
       "practicePage": 1,
       "transcriptPage": 151

@@ -27,6 +27,7 @@ export function AudioPlayer({
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1);
+  const [isBuffering, setIsBuffering] = useState(false);
 
   // A-B Repeat States
   const [pointA, setPointA] = useState<number | null>(null);
@@ -275,9 +276,19 @@ export function AudioPlayer({
       <audio
         ref={audioRef}
         src={audioUrl}
+        preload="auto"
+        crossOrigin="anonymous"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={() => setIsPlaying(false)}
+        onWaiting={() => setIsBuffering(true)}
+        onPlaying={() => setIsBuffering(false)}
+        onStalled={() => setIsBuffering(true)}
+        onError={(e) => {
+          console.error('Audio error:', e);
+          setIsBuffering(false);
+          setIsPlaying(false);
+        }}
       />
 
       {/* Resume Progress Toast */}
@@ -316,10 +327,12 @@ export function AudioPlayer({
 
         <button
           onClick={togglePlay}
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-app-text text-app-bg transition-transform hover:scale-105 active:scale-95 shadow-xs cursor-pointer"
+          className={`flex h-11 w-11 items-center justify-center rounded-full bg-app-text text-app-bg transition-transform hover:scale-105 active:scale-95 shadow-xs cursor-pointer ${isBuffering ? 'animate-pulse opacity-70' : ''}`}
           title="Play/Pause (Space)"
         >
-          {isPlaying ? (
+          {isBuffering ? (
+            <RotateCcw className="h-5 w-5 animate-spin" />
+          ) : isPlaying ? (
             <Pause className="h-5 w-5 fill-current" />
           ) : (
             <Play className="h-5 w-5 fill-current ml-0.5" />
@@ -338,7 +351,9 @@ export function AudioPlayer({
       {/* Middle: Progress Slider */}
       <div className="flex flex-1 items-center justify-center gap-4 px-8 max-w-2xl">
         <span className="w-10 text-right text-xs font-mono text-app-text/60">
-          {formatTime(currentTime)}
+          {isBuffering ? (
+            <span className="text-amber-500 animate-pulse">Tải...</span>
+          ) : formatTime(currentTime)}
         </span>
         
         <input
