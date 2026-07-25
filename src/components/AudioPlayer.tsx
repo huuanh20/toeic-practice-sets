@@ -232,6 +232,7 @@ export function AudioPlayer({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying, isMuted, volume, playbackSpeed, notesOpen, pointA, pointB, initialTime, showResumeBanner]);
 
   // Formatting helper (MM:SS)

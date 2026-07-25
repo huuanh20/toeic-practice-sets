@@ -280,10 +280,10 @@ export function AnswerSheet({
                       <div className="flex flex-col">
                         <span className="text-[10px] text-app-text/40 font-bold uppercase">{attempt.timestamp}</span>
                         <span className="text-xs font-extrabold text-app-text mt-1">
-                          Đúng: <span className="text-emerald-500">{attempt.correctCount}/100</span>
+                          Đúng: <span className="text-emerald-500">{attempt.correctCount}/200</span>
                         </span>
                         <span className="text-xs text-app-text/60 mt-0.5">
-                          Điểm ước lượng: <span className="font-bold text-app-accent">{attempt.estimatedScore}/495</span>
+                          Điểm ước lượng: <span className="font-bold text-app-accent">{attempt.estimatedScore}/990</span>
                         </span>
                       </div>
                       
@@ -451,7 +451,7 @@ export function AnswerSheet({
                         const code = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
                         navigator.clipboard.writeText(code);
                         alert("✨ Đã sao chép mã sao lưu vào bộ nhớ tạm! Hãy mở Chrome còn lại, dán mã vào phần Khôi phục bên dưới.");
-                      } catch (e) {
+                      } catch {
                         alert("Lỗi khi tạo mã sao lưu!");
                       }
                     }}
@@ -492,7 +492,7 @@ export function AnswerSheet({
                             } else {
                               alert("Không tìm thấy dữ liệu TOEIC hợp lệ!");
                             }
-                          } catch (e) {
+                          } catch {
                             alert("Mã sao lưu không hợp lệ, vui lòng kiểm tra lại!");
                           }
                         }}

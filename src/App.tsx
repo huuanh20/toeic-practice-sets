@@ -120,8 +120,7 @@ export default function App() {
     }
   };
 
-  // Page Manual Paging (Updates PDF Read Position Memory)
-  const handlePageChange = (newPage: number) => {
+  const handlePageChange = useCallback((newPage: number) => {
     setPage(newPage);
     
     // Save position to memory
@@ -132,7 +131,7 @@ export default function App() {
     }));
 
     setRecent({ testId: activeTestId, tab: activeTab, page: newPage });
-  };
+  }, [activeTestId, activeTab, zoom, setPdfPositions, setRecent]);
 
   // Fetch library configuration
   useEffect(() => {
@@ -487,7 +486,7 @@ export default function App() {
         } else {
           alert('Invalid format. Notes file must contain a valid JSON object.');
         }
-      } catch (err) {
+      } catch {
         alert('Error parsing uploaded notes file.');
       }
     };

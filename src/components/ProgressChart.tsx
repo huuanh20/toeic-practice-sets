@@ -22,9 +22,17 @@ export function ProgressChart({ attempts }: ProgressChartProps) {
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
 
+  // Parse "DD/MM/YYYY HH:MM" format into a comparable timestamp
+  const parseTimestamp = (ts: string): number => {
+    const match = ts.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})$/);
+    if (!match) return 0;
+    const [, day, month, year, hours, minutes] = match;
+    return new Date(+year, +month - 1, +day, +hours, +minutes).getTime();
+  };
+
   // Sort by timestamp
   const sortedAttempts = [...attempts].sort((a, b) => 
-    new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    parseTimestamp(a.timestamp) - parseTimestamp(b.timestamp)
   );
 
   const xStep = innerWidth / Math.max(sortedAttempts.length - 1, 1);
