@@ -131,36 +131,36 @@ export function CommandPalette({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-[15vh] backdrop-blur-xs">
-      <div className="w-full max-w-lg overflow-hidden rounded-lg border border-app-border bg-app-card shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-[15vh] backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-app-border bg-app-card shadow-2xl animate-scale-in">
         {/* Search Input */}
-        <div className="flex items-center border-b border-app-border px-4 py-3">
-          <Search className="mr-3 h-5 w-5 text-app-text/40" />
+        <div className="flex items-center border-b border-app-border px-4 py-3.5 bg-app-bg/30">
+          <Search className="mr-3 h-5 w-5 text-app-accent" />
           <input
             ref={inputRef}
             type="text"
             placeholder="Type a command or search..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-transparent text-sm text-app-text placeholder-app-text/40 outline-hidden"
+            className="w-full bg-transparent text-sm text-app-text placeholder-app-text-muted/60 outline-hidden font-medium"
           />
         </div>
 
         {/* Commands List */}
         <div className="max-h-80 overflow-y-auto p-2">
           {filteredCommands.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-6 text-app-text/50">
-              <ShieldAlert className="mb-2 h-5 w-5 opacity-60" />
-              <span className="text-xs">No matching commands found.</span>
+            <div className="flex flex-col items-center justify-center py-8 text-app-text-muted">
+              <ShieldAlert className="mb-2 h-6 w-6 opacity-60 text-app-accent" />
+              <span className="text-xs font-medium">No matching commands found.</span>
             </div>
           ) : (
-            <div>
+            <div className="space-y-1">
               {/* Group commands by category in output */}
               {Array.from(new Set(filteredCommands.map((c) => c.category))).map((category) => {
                 const categoryCommands = filteredCommands.filter((c) => c.category === category);
                 return (
-                  <div key={category}>
-                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-app-text/40">
+                  <div key={category} className="mb-2">
+                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-app-text-muted">
                       {category}
                     </div>
                     {categoryCommands.map((cmd) => {
@@ -174,18 +174,18 @@ export function CommandPalette({
                             cmd.action();
                             onClose();
                           }}
-                          className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors ${
+                          className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-xs font-semibold transition-all duration-200 cursor-pointer ${
                             isSelected
-                              ? 'bg-app-hover text-app-text font-medium'
-                              : 'text-app-text/80 hover:bg-app-hover/50'
+                              ? 'gradient-accent text-white shadow-md shadow-app-accent/20'
+                              : 'text-app-text/80 hover:bg-app-hover hover:text-app-text'
                           }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            <span className="text-app-text/60">{cmd.icon}</span>
+                            <span className={isSelected ? 'text-white' : 'text-app-accent'}>{cmd.icon}</span>
                             <span>{cmd.label}</span>
                           </div>
                           {isSelected && (
-                            <span className="text-[10px] text-app-text/40 font-mono">enter</span>
+                            <span className="text-[10px] text-white/80 font-mono bg-white/20 px-1.5 py-0.5 rounded">enter</span>
                           )}
                         </button>
                       );
@@ -198,7 +198,7 @@ export function CommandPalette({
         </div>
 
         {/* Footer shortcuts helper */}
-        <div className="flex justify-between border-t border-app-border bg-app-sidebar/40 px-4 py-2.5 text-[10px] text-app-text/40 font-semibold">
+        <div className="flex justify-between border-t border-app-border bg-app-hover/30 px-4 py-2.5 text-[10px] text-app-text-muted font-semibold">
           <span>↑↓ to navigate</span>
           <span>enter to select</span>
           <span>esc to close</span>
