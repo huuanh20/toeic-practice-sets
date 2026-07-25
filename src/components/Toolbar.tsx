@@ -51,42 +51,28 @@ export function Toolbar({
     }
   };
 
+  const tabClass = (tab: string) =>
+    `flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold tracking-wide transition-all duration-200 cursor-pointer ${
+      activeTab === tab
+        ? 'gradient-accent text-white shadow-md shadow-app-accent/20'
+        : 'text-app-text-muted hover:bg-app-hover hover:text-app-text'
+    }`;
+
   return (
-    <div className="flex h-14 w-full items-center justify-between border-b border-app-border bg-app-card px-4 shadow-xs">
+    <div className="flex h-14 w-full items-center justify-between border-b border-app-border bg-app-card px-4 shadow-sm">
       {/* Left: Tab selectors */}
-      <div className="flex items-center gap-1">
-        <button
-          onClick={() => onTabChange('practice')}
-          className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all ${
-            activeTab === 'practice'
-              ? 'bg-app-accent text-white'
-              : 'text-app-text/60 hover:bg-app-hover hover:text-app-text'
-          }`}
-        >
+      <div className="flex items-center gap-1 rounded-2xl bg-app-hover/40 p-1 border border-app-border/30">
+        <button onClick={() => onTabChange('practice')} className={tabClass('practice')}>
           <FileText className="h-3.5 w-3.5" />
           Practice
         </button>
         
-        <button
-          onClick={() => onTabChange('transcript')}
-          className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all ${
-            activeTab === 'transcript'
-              ? 'bg-app-accent text-white'
-              : 'text-app-text/60 hover:bg-app-hover hover:text-app-text'
-          }`}
-        >
+        <button onClick={() => onTabChange('transcript')} className={tabClass('transcript')}>
           <AlignLeft className="h-3.5 w-3.5" />
           Transcript
         </button>
 
-        <button
-          onClick={() => onTabChange('vocabulary')}
-          className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all ${
-            activeTab === 'vocabulary'
-              ? 'bg-app-accent text-white'
-              : 'text-app-text/60 hover:bg-app-hover hover:text-app-text'
-          }`}
-        >
+        <button onClick={() => onTabChange('vocabulary')} className={tabClass('vocabulary')}>
           <Book className="h-3.5 w-3.5" />
           Vocabulary
         </button>
@@ -96,10 +82,10 @@ export function Toolbar({
           target="_blank"
           rel="noopener noreferrer"
           title="Mở PDF gốc trong tab mới để copy chữ (Chrome/Edge tự động OCR)"
-          className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-app-accent hover:bg-app-hover transition-all border border-dashed border-app-accent/30 ml-2"
+          className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11px] font-semibold text-app-accent hover:bg-app-accent-soft transition-all ml-0.5 cursor-pointer"
         >
           <ExternalLink className="h-3.5 w-3.5" />
-          Mở PDF gốc
+          <span className="hidden lg:inline">Mở PDF gốc</span>
         </a>
       </div>
 
@@ -112,27 +98,27 @@ export function Toolbar({
               onClick={() => onPageChange(Math.max(1, page - 1))}
               disabled={page <= 1}
               title="Previous Page (PageUp / ArrowUp)"
-              className="rounded p-1 text-app-text/60 hover:bg-app-hover hover:text-app-text disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+              className="rounded-lg p-1.5 text-app-text-muted hover:bg-app-hover hover:text-app-text disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-all"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
 
             <input
-              key={`${activeTab}-${page}`} // Force input value update when page changes
+              key={`${activeTab}-${page}`}
               type="text"
               defaultValue={page}
               onKeyDown={handlePageInput}
               onBlur={(e) => { e.target.value = page.toString(); }}
-              className="w-12 rounded border border-app-border bg-app-bg px-1 py-0.5 text-center text-sm text-app-text focus:border-app-accent focus:outline-hidden"
+              className="w-12 rounded-lg border border-app-border bg-app-bg px-1 py-1 text-center text-sm font-medium text-app-text focus:border-app-accent focus:outline-hidden focus:ring-1 focus:ring-app-accent/20 transition-all"
             />
-            <span className="text-app-text/40">/</span>
-            <span>{numPages || '--'}</span>
+            <span className="text-app-text-muted font-medium">/</span>
+            <span className="font-semibold">{numPages || '--'}</span>
 
             <button
               onClick={() => onPageChange(Math.min(numPages, page + 1))}
               disabled={page >= numPages}
               title="Next Page (PageDown / ArrowDown)"
-              className="rounded p-1 text-app-text/60 hover:bg-app-hover hover:text-app-text disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+              className="rounded-lg p-1.5 text-app-text-muted hover:bg-app-hover hover:text-app-text disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-all"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -143,40 +129,40 @@ export function Toolbar({
             <button
               onClick={() => onZoomChange(Math.max(0.5, zoom - 0.1))}
               title="Zoom Out"
-              className="rounded p-1 text-app-text/60 hover:bg-app-hover hover:text-app-text"
+              className="rounded-lg p-1.5 text-app-text-muted hover:bg-app-hover hover:text-app-text cursor-pointer transition-all"
             >
               <ZoomOut className="h-4 w-4" />
             </button>
-            <span className="w-14 text-center text-xs font-semibold text-app-text/80">
+            <span className="w-14 text-center text-xs font-bold text-app-text-muted tabular-nums">
               {Math.round(zoom * 100)}%
             </span>
             <button
               onClick={() => onZoomChange(Math.min(3.0, zoom + 0.1))}
               title="Zoom In"
-              className="rounded p-1 text-app-text/60 hover:bg-app-hover hover:text-app-text"
+              className="rounded-lg p-1.5 text-app-text-muted hover:bg-app-hover hover:text-app-text cursor-pointer transition-all"
             >
               <ZoomIn className="h-4 w-4" />
             </button>
             <button
               onClick={() => onZoomChange(1.0)}
               title="Reset Zoom"
-              className="ml-1 rounded p-1 text-app-text/40 hover:bg-app-hover hover:text-app-text"
+              className="ml-1 rounded-lg p-1.5 text-app-text-muted/50 hover:bg-app-hover hover:text-app-text cursor-pointer transition-all"
             >
               <Maximize2 className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
       ) : (
-        <div className="flex items-center gap-2 rounded-lg bg-app-hover/50 px-4 py-1.5 text-xs font-bold text-app-accent border border-app-accent/25 animate-pulse shadow-xs">
+        <div className="flex items-center gap-2 rounded-xl bg-app-accent-soft px-4 py-1.5 text-xs font-bold text-app-accent border border-app-accent/20 animate-pulse shadow-sm">
           <Sparkles className="h-3.5 w-3.5 text-app-accent" />
           Interactive Quizlet Active
         </div>
       )}
 
       {/* Right: Info Indicators, Notes & Toggle Status */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         {/* Speed indicator */}
-        <div className="hidden rounded-md bg-app-hover/70 px-2 py-1 text-xs font-semibold text-app-text/85 sm:block border border-app-border/20">
+        <div className="hidden rounded-xl bg-app-hover/60 px-2.5 py-1 text-xs font-bold text-app-text-muted sm:block border border-app-border/20 tabular-nums">
           Speed: {audioSpeed.toFixed(2)}x
         </div>
 
@@ -184,10 +170,10 @@ export function Toolbar({
         <button
           onClick={onToggleStatus}
           title={testStatus === 'completed' ? "Mark as In Progress" : "Mark as Completed"}
-          className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold tracking-wider transition-all border ${
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold tracking-wide transition-all duration-200 border cursor-pointer ${
             testStatus === 'completed'
-              ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-              : 'bg-app-bg text-app-text/85 border-app-border hover:bg-app-hover'
+              ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 shadow-sm'
+              : 'bg-app-bg text-app-text-muted border-app-border hover:bg-app-hover hover:text-app-text'
           }`}
         >
           {testStatus === 'completed' ? (
@@ -195,17 +181,17 @@ export function Toolbar({
           ) : (
             <Square className="h-4 w-4" />
           )}
-          <span>{testStatus === 'completed' ? 'Completed' : 'Complete?'}</span>
+          <span className="hidden sm:inline">{testStatus === 'completed' ? 'Completed' : 'Complete?'}</span>
         </button>
 
         {/* Split View Toggle */}
         <button
           onClick={onToggleSplit}
           title={isSplit ? "Switch to Single View" : "Switch to Split View (Reading + Vocab)"}
-          className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold tracking-wider transition-all border cursor-pointer ${
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold tracking-wide transition-all duration-200 border cursor-pointer ${
             isSplit
-              ? 'bg-app-accent text-white border-app-accent shadow-xs'
-              : 'bg-app-bg text-app-text/85 border-app-border hover:bg-app-hover'
+              ? 'gradient-accent text-white border-transparent shadow-md shadow-app-accent/20'
+              : 'bg-app-bg text-app-text-muted border-app-border hover:bg-app-hover hover:text-app-text'
           }`}
         >
           <Columns className="h-4 w-4" />
@@ -216,10 +202,10 @@ export function Toolbar({
         <button
           onClick={onToggleAnswerSheet}
           title={showAnswerSheet ? "Hide Answer Sheet" : "Show Answer Sheet (Phiếu đáp án)"}
-          className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold tracking-wider transition-all border cursor-pointer ${
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold tracking-wide transition-all duration-200 border cursor-pointer ${
             showAnswerSheet
-              ? 'bg-app-accent text-white border-app-accent shadow-xs'
-              : 'bg-app-bg text-app-text/85 border-app-border hover:bg-app-hover'
+              ? 'gradient-accent text-white border-transparent shadow-md shadow-app-accent/20'
+              : 'bg-app-bg text-app-text-muted border-app-border hover:bg-app-hover hover:text-app-text'
           }`}
         >
           <ClipboardList className="h-4 w-4" />
@@ -229,7 +215,7 @@ export function Toolbar({
         {/* Notes Trigger */}
         <button
           onClick={onOpenNotes}
-          className="flex items-center gap-1.5 rounded-md bg-app-accent px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-white transition-all hover:opacity-90 shadow-xs cursor-pointer"
+          className="flex items-center gap-1.5 rounded-xl gradient-accent px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-white transition-all hover:opacity-90 shadow-md shadow-app-accent/25 cursor-pointer hover:shadow-lg hover:shadow-app-accent/30 active:scale-[0.97]"
         >
           <FileEdit className="h-3.5 w-3.5" />
           Notes

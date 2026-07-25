@@ -58,36 +58,36 @@ export function NotesModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs">
-      <div className="relative w-full max-w-2xl rounded-lg border border-app-border bg-app-card p-6 shadow-2xl transition-all">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-2xl rounded-2xl border border-app-border bg-app-card p-6 shadow-2xl animate-scale-in">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-app-border pb-3">
+        <div className="flex items-center justify-between border-b border-app-border pb-4">
           <h2 className="text-lg font-bold text-app-text">
-            Notes: {testTitle}
+            📝 Notes: {testTitle}
           </h2>
           <button
             onClick={onClose}
-            className="rounded-md p-1.5 text-app-text/50 hover:bg-app-hover hover:text-app-text"
+            className="rounded-xl p-2 text-app-text-muted hover:bg-app-hover hover:text-app-text transition-all cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="mt-4">
+        <div className="mt-5">
           <textarea
             value={noteText}
             onChange={(e) => setNoteText(e.target.value)}
             placeholder="Type your notes here... (Why is this answer wrong? Vocabulary meanings? Key grammar points?)"
-            className="h-96 w-full resize-none rounded-md border border-app-border bg-app-bg p-4 text-sm leading-relaxed text-app-text focus:border-app-accent focus:outline-hidden"
+            className="h-96 w-full resize-none rounded-xl border border-app-border bg-app-bg p-4 text-sm leading-relaxed text-app-text placeholder:text-app-text-muted/60 focus:border-app-accent focus:outline-hidden focus:ring-2 focus:ring-app-accent/10 transition-all"
             autoFocus
           />
         </div>
 
         {/* Footer */}
-        <div className="mt-4 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs text-app-text/60">
+        <div className="mt-5 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-xs text-app-text-muted">
             {saveStatus === 'saving' && (
               <span className="flex items-center gap-1 animate-pulse">
                 Saving...
@@ -99,7 +99,7 @@ export function NotesModal({
               </span>
             )}
             {saveStatus === 'idle' && (
-              <span className="text-app-text/40">
+              <span className="text-app-text-muted/60">
                 Auto-saves while typing...
               </span>
             )}
@@ -107,7 +107,7 @@ export function NotesModal({
           
           <button
             onClick={handleManualSave}
-            className="flex items-center gap-1.5 rounded-md bg-app-accent px-4 py-2 text-sm font-semibold text-white hover:opacity-90 shadow-xs cursor-pointer"
+            className="flex items-center gap-2 rounded-xl gradient-accent px-5 py-2.5 text-sm font-bold text-white hover:opacity-90 shadow-lg shadow-app-accent/25 cursor-pointer active:scale-[0.97] transition-all"
           >
             <Save className="h-4 w-4" /> Save Now
           </button>

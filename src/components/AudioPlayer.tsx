@@ -272,7 +272,7 @@ export function AudioPlayer({
   };
 
   return (
-    <div className="relative flex h-20 w-full items-center justify-between border-t border-app-border bg-app-card px-6 shadow-md shrink-0">
+    <div className="relative flex h-20 w-full items-center justify-between border-t border-app-border bg-app-card px-6 shadow-lg shrink-0">
       <audio
         ref={audioRef}
         src={audioUrl}
@@ -320,14 +320,14 @@ export function AudioPlayer({
         <button
           onClick={() => seekBy(-10)}
           title="Rewind 10s (J)"
-          className="rounded-full p-2 text-app-text/60 hover:bg-app-hover hover:text-app-text"
+          className="rounded-xl p-2 text-app-text-muted hover:bg-app-hover hover:text-app-text transition-all cursor-pointer"
         >
           <span className="text-xs font-bold">-10s</span>
         </button>
 
         <button
           onClick={togglePlay}
-          className={`flex h-11 w-11 items-center justify-center rounded-full bg-app-text text-app-bg transition-transform hover:scale-105 active:scale-95 shadow-xs cursor-pointer ${isBuffering ? 'animate-pulse opacity-70' : ''}`}
+          className={`flex h-12 w-12 items-center justify-center rounded-full gradient-accent text-white transition-all hover:scale-105 active:scale-95 shadow-lg shadow-app-accent/30 cursor-pointer ${isBuffering ? 'animate-pulse opacity-80' : ''}`}
           title="Play/Pause (Space)"
         >
           {isBuffering ? (
@@ -342,7 +342,7 @@ export function AudioPlayer({
         <button
           onClick={() => seekBy(10)}
           title="Forward 10s (L)"
-          className="rounded-full p-2 text-app-text/60 hover:bg-app-hover hover:text-app-text"
+          className="rounded-xl p-2 text-app-text-muted hover:bg-app-hover hover:text-app-text transition-all cursor-pointer"
         >
           <span className="text-xs font-bold">+10s</span>
         </button>
@@ -350,9 +350,9 @@ export function AudioPlayer({
 
       {/* Middle: Progress Slider */}
       <div className="flex flex-1 items-center justify-center gap-4 px-8 max-w-2xl">
-        <span className="w-10 text-right text-xs font-mono text-app-text/60">
+        <span className="w-12 text-right text-xs font-mono text-app-text-muted tabular-nums">
           {isBuffering ? (
-            <span className="text-amber-500 animate-pulse">Tải...</span>
+            <span className="text-amber-500 animate-pulse text-[10px]">Tải...</span>
           ) : formatTime(currentTime)}
         </span>
         
@@ -362,10 +362,10 @@ export function AudioPlayer({
           max={duration || 100}
           value={currentTime}
           onChange={handleSliderChange}
-          className="h-1 w-full cursor-pointer appearance-none rounded-lg bg-app-hover accent-app-accent border border-app-border/10"
+          className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-app-hover accent-app-accent border-none"
         />
 
-        <span className="w-10 text-left text-xs font-mono text-app-text/60">
+        <span className="w-12 text-left text-xs font-mono text-app-text-muted tabular-nums">
           {formatTime(duration)}
         </span>
       </div>
@@ -376,10 +376,10 @@ export function AudioPlayer({
         <div className="flex items-center gap-1.5 border-r border-app-border pr-5">
           <button
             onClick={handleSetA}
-            className={`rounded-md px-2 py-1 text-xs font-bold border transition-all ${
+            className={`rounded-lg px-2.5 py-1 text-xs font-bold border transition-all duration-200 cursor-pointer ${
               pointA !== null
-                ? 'bg-app-accent text-white border-app-accent'
-                : 'bg-app-bg text-app-text/80 border-app-border hover:bg-app-hover'
+                ? 'gradient-accent text-white border-transparent shadow-md shadow-app-accent/20'
+                : 'bg-app-bg text-app-text/70 border-app-border/50 hover:bg-app-hover'
             }`}
             title="Set Loop Point A"
           >
@@ -389,10 +389,10 @@ export function AudioPlayer({
           <button
             onClick={handleSetB}
             disabled={pointA === null}
-            className={`rounded-md px-2 py-1 text-xs font-bold border transition-all disabled:opacity-40 ${
+            className={`rounded-lg px-2.5 py-1 text-xs font-bold border transition-all duration-200 disabled:opacity-40 cursor-pointer ${
               pointB !== null
-                ? 'bg-app-accent text-white border-app-accent'
-                : 'bg-app-bg text-app-text/80 border-app-border hover:bg-app-hover'
+                ? 'gradient-accent text-white border-transparent shadow-md shadow-app-accent/20'
+                : 'bg-app-bg text-app-text/70 border-app-border/50 hover:bg-app-hover'
             }`}
             title="Set Loop Point B"
           >
@@ -414,7 +414,7 @@ export function AudioPlayer({
         <div className="flex items-center gap-2">
           <button
             onClick={toggleMute}
-            className="text-app-text/60 hover:text-app-text"
+            className="text-app-text-muted hover:text-app-text transition-colors cursor-pointer"
           >
             {isMuted ? <VolumeX className="h-4.5 w-4.5" /> : <Volume2 className="h-4.5 w-4.5" />}
           </button>
@@ -425,7 +425,7 @@ export function AudioPlayer({
             step={0.05}
             value={isMuted ? 0 : volume}
             onChange={handleVolumeChange}
-            className="w-16 h-1 cursor-pointer appearance-none rounded-lg bg-app-hover accent-app-accent"
+            className="w-16 h-1.5 cursor-pointer appearance-none rounded-full bg-app-hover accent-app-accent"
           />
         </div>
 
@@ -433,17 +433,17 @@ export function AudioPlayer({
         <div className="flex items-center gap-1.5 border-l border-app-border pl-5">
           <button
             onClick={() => adjustSpeed(-1)}
-            className="rounded px-1.5 py-1 text-xs font-semibold text-app-text/50 hover:bg-app-hover hover:text-app-text"
+            className="rounded-lg px-2 py-1 text-xs font-bold text-app-text-muted hover:bg-app-hover hover:text-app-text transition-all cursor-pointer"
             title="Slower ( [ )"
           >
             [
           </button>
-          <span className="w-10 text-center text-xs font-bold text-app-text/80">
+          <span className="w-12 text-center text-xs font-bold text-app-text-muted tabular-nums">
             {playbackSpeed.toFixed(2)}x
           </span>
           <button
             onClick={() => adjustSpeed(1)}
-            className="rounded px-1.5 py-1 text-xs font-semibold text-app-text/50 hover:bg-app-hover hover:text-app-text"
+            className="rounded-lg px-2 py-1 text-xs font-bold text-app-text-muted hover:bg-app-hover hover:text-app-text transition-all cursor-pointer"
             title="Faster ( ] )"
           >
             ]

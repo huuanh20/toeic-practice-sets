@@ -160,11 +160,13 @@ export function AnswerSheet({
   const totalScore = listeningScore + readingScore;
 
   return (
-    <div className="flex h-full w-80 flex-col border-l border-app-border bg-app-card shadow-lg select-none">
+    <div className="flex h-full w-80 flex-col border-l border-app-border bg-app-sidebar shadow-xl select-none">
       {/* Header */}
       <div className="flex h-14 items-center justify-between border-b border-app-border bg-app-card px-4 shrink-0">
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-app-accent" />
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-6 w-6 items-center justify-center rounded-lg gradient-accent shadow-sm">
+            <BookOpen className="h-3.5 w-3.5 text-white" />
+          </div>
           <span className="text-sm font-bold text-app-text">Answer Sheet (Test {testId})</span>
         </div>
         <button
@@ -186,18 +188,18 @@ export function AnswerSheet({
 
       {/* Mode Selector */}
       <div className="flex flex-col border-b border-app-border bg-app-bg/50 p-2 gap-2 shrink-0">
-        <div className="flex gap-1 bg-app-bg p-0.5 rounded-lg border border-app-border">
+        <div className="flex gap-1 bg-app-bg p-1 rounded-xl border border-app-border/50">
           <button
             onClick={() => {
               if (isGradingRevealed) return; // Locked after grading
               setTab('doing');
             }}
-            className={`flex-1 rounded-md py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+            className={`flex-1 rounded-lg py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
               tab === 'doing'
-                ? 'bg-app-accent text-white shadow-xs'
+                ? 'gradient-accent text-white shadow-md shadow-app-accent/20'
                 : isGradingRevealed
                 ? 'text-app-text/30 cursor-not-allowed'
-                : 'text-app-text/60 hover:bg-app-hover'
+                : 'text-app-text-muted hover:bg-app-hover'
             }`}
             disabled={isGradingRevealed}
             title={isGradingRevealed ? 'Đã chấm điểm — hãy nộp bài trước khi làm lại' : ''}
@@ -210,27 +212,27 @@ export function AnswerSheet({
               // Only reset reveal if not yet revealed
               if (!isGradingRevealed) setIsGradingRevealed(false);
             }}
-            className={`flex-1 rounded-md py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+            className={`flex-1 rounded-lg py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
               tab === 'grading'
-                ? 'bg-amber-500 text-white shadow-xs'
-                : 'text-app-text/60 hover:bg-app-hover'
+                ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                : 'text-app-text-muted hover:bg-app-hover'
             }`}
           >
             Grading
           </button>
           <button
             onClick={() => setTab('history')}
-            className={`flex-1 rounded-md py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+            className={`flex-1 rounded-lg py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
               tab === 'history'
-                ? 'bg-purple-600 text-white shadow-xs'
-                : 'text-app-text/60 hover:bg-app-hover'
+                ? 'bg-violet-600 text-white shadow-md shadow-violet-600/20'
+                : 'text-app-text-muted hover:bg-app-hover'
             }`}
           >
             History
           </button>
         </div>
         {isGrading && isGradingRevealed && (
-          <div className={`text-[10px] text-center font-medium py-1 rounded select-text ${
+          <div className={`text-[10px] text-center font-medium py-1.5 rounded-lg select-text ${
             hasKey ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/5' : 'text-amber-600 dark:text-amber-400 bg-amber-500/5'
           }`}>
             {hasKey 
@@ -547,17 +549,17 @@ export function AnswerSheet({
             elements.push(
               <div 
                 key={num}
-                className={`flex items-center justify-between rounded-lg p-2 transition-all ${
+                className={`flex items-center justify-between rounded-xl p-2 transition-all duration-200 ${
                   showGradeResult && grade === true 
-                    ? 'bg-emerald-500/10 border border-emerald-500/20' 
+                    ? 'bg-emerald-500/8 border border-emerald-500/20' 
                     : showGradeResult && grade === false
-                    ? 'bg-rose-500/10 border border-rose-500/20'
-                    : 'bg-app-bg border border-app-border/40 hover:border-app-border'
+                    ? 'bg-rose-500/8 border border-rose-500/20'
+                    : 'bg-app-bg border border-app-border/30 hover:border-app-accent/20 hover:shadow-sm'
                 }`}
               >
                 {/* Question Number */}
                 <div className="flex items-center gap-1.5 w-12">
-                  <span className="text-xs font-bold text-app-text/50">{num.toString().padStart(3, '0')}.</span>
+                  <span className="text-xs font-bold text-app-text-muted tabular-nums">{num.toString().padStart(3, '0')}.</span>
                   {showGradeResult && grade === true && <Check className="h-3.5 w-3.5 text-emerald-500 stroke-[3]" />}
                   {showGradeResult && grade === false && <X className="h-3.5 w-3.5 text-rose-500 stroke-[3]" />}
                 </div>
@@ -569,10 +571,10 @@ export function AnswerSheet({
                       key={ans}
                       disabled={isGrading}
                       onClick={() => handleAnswerSelect(num, selectedAns === ans ? null : ans)}
-                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all border cursor-pointer ${
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all duration-200 border cursor-pointer ${
                         selectedAns === ans
-                          ? 'bg-app-accent text-white border-app-accent shadow-xs'
-                          : 'bg-app-card text-app-text/70 border-app-border hover:bg-app-hover disabled:hover:bg-transparent'
+                          ? 'gradient-accent text-white border-transparent shadow-md shadow-app-accent/25'
+                          : 'bg-app-card text-app-text/70 border-app-border/50 hover:bg-app-hover hover:border-app-accent/30 disabled:hover:bg-transparent'
                       }`}
                     >
                       {ans}
@@ -680,21 +682,21 @@ export function AnswerSheet({
                 </button>
                 
                 {/* Estimate Score Output */}
-                <div className="flex flex-col gap-1.5 rounded-lg bg-app-accent/10 border border-app-accent/20 p-2.5">
+                <div className="flex flex-col gap-2 rounded-xl bg-app-accent-soft border border-app-accent/15 p-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-app-text/60">🎧 Listening:</span>
-                    <span className="text-xs font-extrabold text-app-accent">{listeningScore} / 495</span>
+                    <span className="text-[10px] font-bold text-app-text-muted">🎧 Listening:</span>
+                    <span className="text-xs font-extrabold text-app-accent tabular-nums">{listeningScore} / 495</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-app-text/60">📖 Reading:</span>
-                    <span className="text-xs font-extrabold text-app-accent">{readingScore} / 495</span>
+                    <span className="text-[10px] font-bold text-app-text-muted">📖 Reading:</span>
+                    <span className="text-xs font-extrabold text-app-accent tabular-nums">{readingScore} / 495</span>
                   </div>
-                  <div className="flex items-center justify-between border-t border-app-accent/20 pt-1.5">
+                  <div className="flex items-center justify-between border-t border-app-accent/15 pt-2">
                     <div className="flex items-center gap-1.5">
                       <Award className="h-4 w-4 text-app-accent" />
                       <span className="text-xs font-bold text-app-text">Total TOEIC:</span>
                     </div>
-                    <span className="text-base font-extrabold text-app-accent">{totalScore} / 990</span>
+                    <span className="text-base font-extrabold text-app-accent tabular-nums">{totalScore} / 990</span>
                   </div>
                 </div>
 
@@ -711,7 +713,7 @@ export function AnswerSheet({
                       }
                     });
                   }}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-app-accent py-2 text-xs font-bold text-white hover:opacity-90 active:scale-98 transition-all cursor-pointer shadow-xs mt-1"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-xl gradient-accent py-2.5 text-xs font-bold text-white hover:opacity-90 active:scale-[0.97] transition-all cursor-pointer shadow-lg shadow-app-accent/25 mt-1"
                 >
                   <CheckCircle className="h-4 w-4 animate-pulse" />
                   Nộp bài & Lưu lịch sử
@@ -725,7 +727,7 @@ export function AnswerSheet({
                     if (onAutoGrade) onAutoGrade();
                     setIsGradingRevealed(true);
                   }}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-amber-500 py-2 text-xs font-bold text-white hover:bg-amber-600 active:scale-98 transition-all cursor-pointer shadow-xs"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-amber-500 py-2.5 text-xs font-bold text-white hover:bg-amber-600 active:scale-[0.97] transition-all cursor-pointer shadow-lg shadow-amber-500/25"
                 >
                   <CheckCircle className="h-4 w-4" />
                   Bắt đầu chấm điểm
@@ -748,14 +750,14 @@ export function AnswerSheet({
 
       {/* Premium Confirm Modal Overlay */}
       {confirmModal.isOpen && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fade-in">
-          <div className="bg-app-card border border-app-border rounded-xl p-4 shadow-xl max-w-[260px] text-center flex flex-col gap-3 animate-scale-in">
-            <span className="text-xs font-bold text-app-text select-text">{confirmModal.message}</span>
-            <div className="flex gap-2">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-app-card border border-app-border rounded-2xl p-5 shadow-2xl max-w-[280px] text-center flex flex-col gap-4 animate-scale-in">
+            <span className="text-xs font-bold text-app-text select-text leading-relaxed">{confirmModal.message}</span>
+            <div className="flex gap-2.5">
               <button
                 id="modal-cancel-btn"
                 onClick={() => setConfirmModal({ isOpen: false, message: '', onConfirm: () => {} })}
-                className="flex-1 rounded-lg border border-app-border bg-app-bg py-1.5 text-xs font-bold text-app-text/70 hover:bg-app-hover cursor-pointer"
+                className="flex-1 rounded-xl border border-app-border bg-app-bg py-2 text-xs font-bold text-app-text-muted hover:bg-app-hover cursor-pointer transition-all"
               >
                 Hủy
               </button>
@@ -765,7 +767,7 @@ export function AnswerSheet({
                   confirmModal.onConfirm();
                   setConfirmModal({ isOpen: false, message: '', onConfirm: () => {} });
                 }}
-                className="flex-1 rounded-lg bg-rose-500 py-1.5 text-xs font-bold text-white hover:opacity-90 active:scale-98 transition-all cursor-pointer animate-pulse-light"
+                className="flex-1 rounded-xl bg-rose-500 py-2 text-xs font-bold text-white hover:bg-rose-600 active:scale-[0.97] transition-all cursor-pointer shadow-md shadow-rose-500/25"
               >
                 Xác nhận
               </button>

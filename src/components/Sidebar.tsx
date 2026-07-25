@@ -35,14 +35,19 @@ export function Sidebar({
     >
       {/* App Logo / Brand */}
       <div className="flex h-14 items-center justify-between border-b border-app-border px-4">
-        <h1 className="truncate text-sm font-bold tracking-wider text-app-text/90">
-          {bookTitle || 'TOEIC HUB'}
-        </h1>
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg gradient-accent shadow-sm">
+            <span className="text-xs font-extrabold text-white">T</span>
+          </div>
+          <h1 className="truncate text-sm font-bold tracking-wide text-app-text">
+            {bookTitle || 'TOEIC HUB'}
+          </h1>
+        </div>
       </div>
 
       {/* Test List Section */}
-      <div className="flex-1 overflow-y-auto px-2 py-4">
-        <div className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-app-text/50">
+      <div className="flex-1 overflow-y-auto px-2.5 py-4">
+        <div className="mb-3 px-2 text-[10px] font-bold uppercase tracking-[0.12em] text-app-text-muted">
           Practice Tests
         </div>
         <nav className="space-y-1">
@@ -50,9 +55,9 @@ export function Sidebar({
             const status = testProgress[test.id] || 'not-started';
             const isActive = test.id === activeTestId;
 
-            let statusIcon = <Circle className="h-4 w-4 text-app-text/40" />;
+            let statusIcon = <Circle className="h-4 w-4 text-app-text-muted/60" />;
             if (status === 'completed') {
-              statusIcon = <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+              statusIcon = <CheckCircle2 className="h-4 w-4 text-emerald-500 drop-shadow-sm" />;
             } else if (status === 'in-progress') {
               statusIcon = <PlayCircle className="h-4 w-4 text-app-accent" />;
             }
@@ -61,32 +66,37 @@ export function Sidebar({
               <button
                 key={test.id}
                 onClick={() => onSelectTest(test.id)}
-                className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-150 ${
+                className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-200 cursor-pointer ${
                   isActive
-                    ? 'bg-app-hover text-app-text border border-app-border/40 shadow-xs'
-                    : 'text-app-text/80 hover:bg-app-hover hover:text-app-text'
+                    ? 'bg-app-accent-soft text-app-accent shadow-sm border border-app-accent/15'
+                    : 'text-app-text/70 hover:bg-app-hover hover:text-app-text border border-transparent'
                 }`}
               >
-                {statusIcon}
+                <span className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`}>
+                  {statusIcon}
+                </span>
                 <span>Test {test.id}</span>
+                {isActive && (
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-app-accent animate-pulse" />
+                )}
               </button>
             );
           })}
         </nav>
       </div>
 
-      {/* Theme Switcher at bottom */}
+      {/* Theme Switcher */}
       <div className="border-t border-app-border p-3">
-        <div className="flex items-center justify-between rounded-lg bg-app-hover/50 p-1 border border-app-border/30">
+        <div className="flex items-center justify-between rounded-xl bg-app-hover/60 p-1 border border-app-border/30">
           {themes.map((t) => (
             <button
               key={t.name}
               onClick={() => onThemeChange(t.name)}
               title={t.label}
-              className={`flex flex-1 justify-center rounded-md py-1.5 transition-all ${
+              className={`flex flex-1 justify-center rounded-lg py-1.5 transition-all duration-200 cursor-pointer ${
                 theme === t.name
-                  ? 'bg-app-card text-app-text shadow-xs border border-app-border/20'
-                  : 'text-app-text/50 hover:text-app-text'
+                  ? 'bg-app-card text-app-accent shadow-sm border border-app-border/30'
+                  : 'text-app-text-muted hover:text-app-text'
               }`}
             >
               {t.icon}
