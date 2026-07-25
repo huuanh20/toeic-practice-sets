@@ -111,12 +111,14 @@ describe('Auto-Grading Logic', () => {
     // Simulate auto-grading for test 1
     const { answerKeys } = await import('../data/answerKeys')
     const testId = 1
+    const keyAnswers = answerKeys[testId]
     
-    // User answers all correct
+    // User answers all correct by matching the key
     const grades: Record<string, boolean> = {}
     for (let num = 1; num <= 200; num++) {
       const key = `${testId}-${num}`
-      grades[key] = true // All correct
+      const userAnswer = keyAnswers[num] // Same as correct answer
+      grades[key] = userAnswer === keyAnswers[num]
     }
     
     const correctCount = Object.values(grades).filter(v => v === true).length
