@@ -8,7 +8,7 @@ import { CommandPalette } from './components/CommandPalette';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import type { LibraryConfig } from './types/library';
 import { AnswerSheet } from './components/AnswerSheet';
-import { Loader2, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ExternalLink, Sparkles, BookOpen, Menu } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ExternalLink, Sparkles, BookOpen, Menu } from 'lucide-react';
 import { VocabularyQuiz } from './components/VocabularyQuiz';
 import { answerKeys } from './data/answerKeys';
 import type { Attempt } from './types/attempt';
@@ -226,18 +226,47 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-app-bg text-app-text">
-        <Loader2 className="h-10 w-10 animate-spin text-app-accent" />
-        <span className="text-sm font-semibold">Initializing TOEIC Study Hub...</span>
+      <div className="flex h-screen w-screen flex-col items-center justify-center gap-6 bg-app-bg text-app-text">
+        {/* Branded logo */}
+        <div className="relative flex flex-col items-center gap-4 animate-float-in">
+          <div className="relative">
+            <div className="flex h-20 w-20 items-center justify-center rounded-3xl gradient-accent shadow-app-accent animate-glow-pulse">
+              <span className="text-4xl font-extrabold text-white tracking-tight">T</span>
+            </div>
+            {/* Glow bloom */}
+            <div className="absolute inset-0 rounded-3xl gradient-accent opacity-25 blur-2xl scale-150 -z-10" />
+          </div>
+
+          <div className="flex flex-col items-center gap-1">
+            <h1 className="text-2xl font-extrabold tracking-wide text-app-text">TOEIC Study Hub</h1>
+            <p className="text-sm text-app-text-muted">Đang tải dữ liệu luyện thi...</p>
+          </div>
+        </div>
+
+        {/* Animated dot loader */}
+        <div className="flex items-center gap-2" aria-label="Loading">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-2.5 w-2.5 rounded-full gradient-accent"
+              style={{ animation: `dot-bounce 1.4s ease-in-out ${i * 0.2}s infinite` }}
+            />
+          ))}
+        </div>
       </div>
     );
   }
 
   if (!config) {
     return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center gap-2 bg-app-bg text-rose-500">
-        <span className="text-lg font-bold">Library Error</span>
-        <span className="text-sm">Could not find or load library configuration file at public/library/config.json</span>
+      <div className="flex h-screen w-screen flex-col items-center justify-center gap-3 bg-app-bg animate-fade-in">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/20">
+          <span className="text-2xl">⚠️</span>
+        </div>
+        <span className="text-lg font-bold text-rose-500">Library Error</span>
+        <span className="text-sm text-app-text-muted text-center max-w-xs">
+          Không tìm thấy file cấu hình tại <code className="font-mono text-rose-400">public/library/config.json</code>
+        </span>
       </div>
     );
   }
